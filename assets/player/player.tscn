@@ -1,0 +1,51 @@
+[gd_scene load_steps=6 format=3 uid="uid://ce1powc6vdiav"]
+
+[ext_resource type="Script" path="res://assets/player/player.gd" id="1_cgqff"]
+[ext_resource type="Texture2D" uid="uid://bn51sa7udc4o3" path="res://tilemap_packed.png" id="1_qlypt"]
+[ext_resource type="Script" path="res://assets/player/weapon.gd" id="3_alxv6"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_uflpp"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_e31ap"]
+radius = 2.0
+height = 14.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("1_cgqff")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -4)
+texture = ExtResource("1_qlypt")
+hframes = 12
+vframes = 11
+frame = 96
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+scale = Vector2(0.5, 0.5)
+shape = SubResource("CircleShape2D_uflpp")
+
+[node name="Pivot" type="Marker2D" parent="."]
+
+[node name="Weapon" type="Area2D" parent="Pivot"]
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("3_alxv6")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Pivot/Weapon"]
+visible = false
+position = Vector2(12, 0)
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_e31ap")
+
+[node name="Sprite2D" type="Sprite2D" parent="Pivot/Weapon"]
+texture_filter = 1
+position = Vector2(12, 0)
+rotation = 1.5708
+texture = ExtResource("1_qlypt")
+hframes = 12
+vframes = 11
+frame = 104

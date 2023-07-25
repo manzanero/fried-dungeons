@@ -1,0 +1,85 @@
+[gd_scene load_steps=3 format=3 uid="uid://38n0q0jvoxva"]
+
+[ext_resource type="Script" path="res://scenes/scene_handler.gd" id="1_asihe"]
+[ext_resource type="Theme" uid="uid://wdhwb87x2roh" path="res://resources/themes/pixel_ui_theme/PixelTheme_sky.tres" id="2_fmnbt"]
+
+[node name="SceneHandler" type="Node"]
+script = ExtResource("1_asihe")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="MainMenu" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_fmnbt")
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/MainMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/MainMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Panel" type="Panel" parent="CanvasLayer/MainMenu/MarginContainer"]
+custom_minimum_size = Vector2(400, 90)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer/MainMenu/MarginContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "START"
+
+[node name="StartMaster" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Start Master"
+
+[node name="StartPlayer" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Start player"
+
+[node name="TouchButton" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Touch Demo"
+
+[node name="CurrentScene" type="Node" parent="."]

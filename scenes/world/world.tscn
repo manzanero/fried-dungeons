@@ -1,0 +1,222 @@
+[gd_scene load_steps=7 format=3 uid="uid://cfvnrqu5lwgj2"]
+
+[ext_resource type="Script" path="res://scenes/world/world.gd" id="1_lu7c3"]
+[ext_resource type="Script" path="res://assets/camera/camera.gd" id="2_hhmyh"]
+[ext_resource type="PackedScene" uid="uid://fbh6dfkujd3l" path="res://assets/map/map.tscn" id="2_yasqg"]
+[ext_resource type="Theme" uid="uid://wdhwb87x2roh" path="res://resources/themes/pixel_ui_theme/PixelTheme_sky.tres" id="5_autet"]
+[ext_resource type="PackedScene" uid="uid://cx2okcrb4o0n1" path="res://assets/pointer/pointer.tscn" id="5_hhb5x"]
+[ext_resource type="Environment" uid="uid://c5t856858r76b" path="res://scenes/world/world_environment.tres" id="5_i24rl"]
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_lu7c3")
+
+[node name="Maps" type="Node3D" parent="."]
+
+[node name="Map" parent="Maps" instance=ExtResource("2_yasqg")]
+
+[node name="Pointer" parent="." instance=ExtResource("5_hhb5x")]
+
+[node name="CameraPivot" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+script = ExtResource("2_hhmyh")
+max_zoom = 100.0
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0, 0, 0)
+fov = 30.0
+size = 20.0
+near = 0.09
+far = 1000.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.5, 0.866025, 3.78552e-08, 0, -4.37114e-08, 1, 0.866025, -0.5, -2.18557e-08, 0, 0, 0)
+visible = false
+light_energy = 0.25
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = ExtResource("5_i24rl")
+
+[node name="UpdateTimer" type="Timer" parent="."]
+wait_time = 0.1
+autostart = true
+
+[node name="SaveTimer" type="Timer" parent="."]
+wait_time = 10.25
+autostart = true
+
+[node name="HUDCanvas" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="HUD" type="Control" parent="HUDCanvas"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("5_autet")
+
+[node name="Top" type="Control" parent="HUDCanvas/HUD"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+grow_horizontal = 2
+
+[node name="PlayerNameTab" type="TabBar" parent="HUDCanvas/HUD/Top"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 40.0
+grow_horizontal = 2
+tab_alignment = 1
+tab_count = 1
+tab_0/title = "Master"
+
+[node name="Left" type="Control" parent="HUDCanvas/HUD"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+grow_vertical = 2
+theme = ExtResource("5_autet")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/Left"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 8.0
+offset_top = -17.0
+offset_right = 42.0
+offset_bottom = 17.0
+grow_vertical = 2
+
+[node name="NewEntity" type="Button" parent="HUDCanvas/HUD/Left/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "New Entity +"
+alignment = 0
+
+[node name="TotalVision" type="Button" parent="HUDCanvas/HUD/Left/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Total Vision"
+alignment = 0
+
+[node name="ForgetExplored" type="Button" parent="HUDCanvas/HUD/Left/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Forget Explored"
+alignment = 0
+
+[node name="Midde" type="Control" parent="HUDCanvas/HUD"]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 200.0
+offset_right = 200.0
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme = ExtResource("5_autet")
+
+[node name="EntityContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 118.0
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/EntityContextualMenu"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = -40.0
+offset_right = 42.0
+tab_count = 1
+tab_0/title = "Entity"
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/EntityContextualMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer"]
+layout_mode = 2
+
+[node name="EditButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Edit
+"
+
+[node name="InfoButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Info
+
+"
+
+[node name="VisionButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Vision"
+
+[node name="CellContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 118.0
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/CellContextualMenu"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = -40.0
+offset_right = 42.0
+tab_count = 1
+tab_0/title = "Cell"
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/CellContextualMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer"]
+layout_mode = 2
+
+[node name="EditButton" type="Button" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Edit
+"
+
+[node name="InfoButton" type="Button" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Info
+
+"
+
+[node name="ActionsButton" type="Button" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Actions"
+
+[editable path="Maps/Map"]

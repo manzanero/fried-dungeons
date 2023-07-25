@@ -1,0 +1,9 @@
+[gd_resource type="DynamicFont" load_steps=2 format=3]
+
+[ext_resource type="DynamicFontData" uid="uid://bjxcofqgwb7yq" path="res://resources/fonts/OpenSans-Regular.ttf" id="1"]
+
+[resource]
+size = 120
+use_mipmaps = true
+use_filter = true
+font_data = ExtResource( 1 )

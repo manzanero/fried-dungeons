@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://ddb40q1w7mjfq"]
+
+[ext_resource type="Script" path="res://scenes/demo_touch/Demo.gd" id="1_st7aq"]
+
+[node name="VBoxContainer" type="VBoxContainer"]
+offset_right = 130.0
+offset_bottom = 134.0
+script = ExtResource("1_st7aq")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="."]
+layout_mode = 2
+text = "Try the gestures!"
+
+[node name="Label3" type="Label" parent="."]
+layout_mode = 2
+
+[node name="Label4" type="Label" parent="."]
+layout_mode = 2
+
+[node name="Label5" type="Label" parent="."]
+layout_mode = 2

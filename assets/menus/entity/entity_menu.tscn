@@ -1,0 +1,282 @@
+[gd_scene load_steps=4 format=3 uid="uid://wur7a8tyi405"]
+
+[ext_resource type="Theme" uid="uid://wdhwb87x2roh" path="res://resources/themes/pixel_ui_theme/PixelTheme_sky.tres" id="1_kkuq5"]
+[ext_resource type="Script" path="res://assets/menus/entity/entity_menu.gd" id="1_mesci"]
+[ext_resource type="Theme" uid="uid://dopunvp7uxup1" path="res://resources/themes/pixel_ui_theme/PixelTheme_blood.tres" id="3_3qgit"]
+
+[node name="EntityMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+grow_vertical = 2
+theme = ExtResource("1_kkuq5")
+script = ExtResource("1_mesci")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_top = -173.0
+offset_right = 716.0
+offset_bottom = 176.0
+
+[node name="TabBar" type="TabBar" parent="Panel"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = -40.0
+offset_right = 84.0
+tab_count = 1
+tab_0/title = "Entity"
+
+[node name="Entity" type="Label" parent="Panel"]
+layout_mode = 2
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -39.0
+text = "
+"
+
+[node name="TokenTextureTree" type="Tree" parent="Panel/Entity"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 505.0
+offset_top = 3.0
+offset_right = 697.0
+offset_bottom = 292.0
+mouse_force_pass_scroll_events = false
+hide_root = true
+drop_mode_flags = 1
+scroll_horizontal_enabled = false
+
+[node name="GridContainer" type="VBoxContainer" parent="Panel/Entity"]
+layout_mode = 0
+offset_left = 7.0
+offset_top = 7.0
+offset_right = 491.0
+offset_bottom = 337.0
+mouse_filter = 2
+theme_override_constants/separation = 16
+
+[node name="Label" type="Label" parent="Panel/Entity/GridContainer"]
+layout_mode = 2
+text = "Label:"
+
+[node name="LabelEdit" type="LineEdit" parent="Panel/Entity/GridContainer/Label"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 174.0
+offset_top = -4.0
+offset_right = 367.0
+offset_bottom = 30.0
+placeholder_text = "name..."
+
+[node name="LabelPublic" type="Label" parent="Panel/Entity/GridContainer/Label"]
+layout_mode = 0
+offset_left = 389.0
+offset_right = 455.0
+offset_bottom = 30.0
+text = "public:"
+
+[node name="LabelPublicCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Label/LabelPublic"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 66.0
+offset_top = 2.0
+offset_right = 94.0
+offset_bottom = 30.0
+
+[node name="Health" type="Label" parent="Panel/Entity/GridContainer"]
+layout_mode = 2
+text = "Health:                    /"
+
+[node name="HelathEdit" type="SpinBox" parent="Panel/Entity/GridContainer/Health"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 174.0
+offset_top = -4.0
+offset_right = 256.0
+offset_bottom = 30.0
+min_value = -999.0
+max_value = 999.0
+
+[node name="HelathMaxEdit" type="SpinBox" parent="Panel/Entity/GridContainer/Health"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 295.0
+offset_top = -4.0
+offset_right = 377.0
+offset_bottom = 30.0
+min_value = 1.0
+max_value = 999.0
+value = 100.0
+
+[node name="HealtPublic" type="Label" parent="Panel/Entity/GridContainer/Health"]
+layout_mode = 0
+offset_left = 389.0
+offset_right = 455.0
+offset_bottom = 30.0
+text = "public:"
+
+[node name="HealtPublicCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Health/HealtPublic"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 66.0
+offset_top = 2.0
+offset_right = 94.0
+offset_bottom = 30.0
+
+[node name="Base" type="Label" parent="Panel/Entity/GridContainer"]
+visible = false
+layout_mode = 2
+text = "Base:"
+
+[node name="BaseCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Base"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 174.0
+offset_right = 202.0
+offset_bottom = 24.0
+
+[node name="BaseSize" type="Label" parent="Panel/Entity/GridContainer"]
+layout_mode = 2
+text = "Base Size:"
+
+[node name="BaseSizeSpinBox" type="SpinBox" parent="Panel/Entity/GridContainer/BaseSize"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 174.0
+offset_top = -4.0
+offset_right = 256.0
+offset_bottom = 30.0
+min_value = 0.1
+max_value = 10.0
+step = 0.1
+value = 0.5
+custom_arrow_step = 0.1
+
+[node name="BaseColor" type="Label" parent="Panel/Entity/GridContainer"]
+layout_mode = 2
+text = "Base Color:"
+
+[node name="BaseColorColorPickerButton" type="ColorPickerButton" parent="Panel/Entity/GridContainer/BaseColor"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 168.0
+offset_top = -3.0
+offset_right = 320.0
+offset_bottom = 29.0
+flat = true
+color = Color(1, 1, 1, 1)
+
+[node name="Token" type="Label" parent="Panel/Entity/GridContainer"]
+visible = false
+layout_mode = 2
+text = "Token:"
+
+[node name="TokenCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Token"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 174.0
+offset_right = 202.0
+offset_bottom = 29.0
+
+[node name="TokenTexture" type="Label" parent="Panel/Entity/GridContainer"]
+layout_mode = 2
+text = "Token Texture:"
+
+[node name="TokenTextureLabel" type="LineEdit" parent="Panel/Entity/GridContainer/TokenTexture"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 174.0
+offset_top = -3.5
+offset_right = 483.0
+offset_bottom = 30.5
+text = "None"
+editable = false
+
+[node name="TokenScale" type="Label" parent="Panel/Entity/GridContainer"]
+visible = false
+layout_mode = 2
+text = "Token Scale:"
+
+[node name="TokenScaleSpinBox" type="SpinBox" parent="Panel/Entity/GridContainer/TokenScale"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 174.0
+offset_top = -4.0
+offset_right = 256.0
+offset_bottom = 30.0
+min_value = 0.1
+max_value = 10.0
+step = 0.1
+value = 1.0
+custom_arrow_step = 0.1
+
+[node name="TokenTint" type="Label" parent="Panel/Entity/GridContainer"]
+visible = false
+layout_mode = 2
+text = "Token Tint:"
+
+[node name="TokenTintColorPickerButton" type="ColorPickerButton" parent="Panel/Entity/GridContainer/TokenTint"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 168.0
+offset_top = -3.0
+offset_right = 320.0
+offset_bottom = 29.0
+flat = true
+color = Color(1, 1, 1, 1)
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/Entity"]
+layout_mode = 2
+offset_left = 13.0
+offset_top = 303.0
+offset_right = 497.0
+offset_bottom = 337.0
+size_flags_vertical = 0
+alignment = 1
+
+[node name="AcceptButton" type="Button" parent="Panel/Entity/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Accept"
+
+[node name="CancelButton" type="Button" parent="Panel/Entity/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Cancel"
+
+[node name="ApplyButton" type="Button" parent="Panel/Entity/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Apply"
+
+[node name="IdLabel" type="Label" parent="Panel/Entity"]
+layout_mode = 0
+offset_left = 467.0
+offset_top = 307.0
+offset_right = 512.0
+offset_bottom = 336.0
+text = "ID: "
+
+[node name="IdEdit" type="LineEdit" parent="Panel/Entity/IdLabel"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 38.0
+offset_top = -4.0
+offset_right = 144.0
+offset_bottom = 30.0
+text = "ABCDEFGH"
+editable = false
+
+[node name="DeleteButton" type="Button" parent="Panel/Entity/IdLabel"]
+unique_name_in_owner = true
+layout_mode = 2
+offset_left = 148.0
+offset_top = -4.0
+offset_right = 230.0
+offset_bottom = 30.0
+theme = ExtResource("3_3qgit")
+text = "Delete"
