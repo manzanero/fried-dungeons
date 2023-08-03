@@ -69,31 +69,37 @@ func populate_texture_tree(selection : String = "None"):
 	for cat in dir.get_directories():
 		var cat_child = token_texture_tree.create_item(root)
 		cat_child.set_text(0, cat)
+		cat_child.set_tooltip_text(0, " ")
 		cat_child.collapsed = selection == "None" or selection.split("/")[0] != cat
 		cat_child.set_selectable(0, false)
 		
-		var cat_dir = DirAccess.open("res://resources/entity_textures/" + cat)
-		for sub_cat in cat_dir.get_directories():
+		for sub_cat in DirAccess.get_directories_at("res://resources/entity_textures/" + cat):
 			var sub_cat_child = token_texture_tree.create_item(cat_child)
 			sub_cat_child.set_text(0, sub_cat)
+			sub_cat_child.set_tooltip_text(0, " ")
 			sub_cat_child.collapsed = selection == "None" or selection.split("/")[1] != sub_cat
 			sub_cat_child.set_selectable(0, false)
 			
-			var sub_cat_dir = DirAccess.open("res://resources/entity_textures/" + cat + "/" + sub_cat)
-			for texture in sub_cat_dir.get_files():
-				if texture.contains(".png") and not texture.contains(".import"):  # when export, .png goes to png.im
+			for texture in DirAccess.get_files_at("res://resources/entity_textures/" + cat + "/" + sub_cat):
+				if texture.contains(".png.import"):
+					if FileAccess.file_exists("res://resources/entity_textures/" + cat + "/" + sub_cat + "/" + texture.split(".import")[0]):  # when export, .png goes to png.im
+						texture = texture.split(".import")[0]
+						
 					var texture_child = token_texture_tree.create_item(sub_cat_child)
 					var texture_basename = texture.split(".png")[0]
 					texture_child.set_text(0, texture_basename)
+					texture_child.set_tooltip_text(0, " ")
 
 					if selection != "None" and selection.split("/")[2] == texture:
 						texture_child.select(0)
+						token_texture_tree.scroll_to_item(texture_child)
 						
 	var none_child = token_texture_tree.create_item(root)
 	none_child.set_text(0, "None")
 	
 	if selection == "None":
 		none_child.select(0)
+		token_texture_tree.scroll_to_item(none_child)
 	
 
 func _set_token_texture_edit():
@@ -115,11 +121,13 @@ func _on_accept_button_pressed():
 
 func _on_delete_button_pressed():
 	queue_free()
+	entity.get_parent().remove_child(entity)
 	entity.queue_free()
 	Server.send_message(Game.world.OpCode.DELETE_ENTITY, {
 		"id": str(entity.name)
 	})
 
+	Game.world.populate_tokens_tree()
 
 func _on_cancel_button_pressed():
 	queue_free()
@@ -172,6 +180,8 @@ func _on_apply_button_pressed():
 			"base_color": Utils.color_to_string(entity.base_color),
 			"texture_path": entity.texture_path,
 		})
+	
+	Game.world.populate_tokens_tree()
 
 
 func _on_input(event):

@@ -21,12 +21,13 @@ top_radius = 0.25
 bottom_radius = 0.25
 height = 0.1
 radial_segments = 32
+rings = 1
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5q7rm"]
 shading_mode = 0
 albedo_color = Color(0.792157, 0.478431, 0.172549, 1)
 
-[sub_resource type="TorusMesh" id="TorusMesh_8yo7c"]
+[sub_resource type="TorusMesh" id="TorusMesh_bb2oo"]
 material = SubResource("StandardMaterial3D_5q7rm")
 inner_radius = 0.2
 outer_radius = 0.3
@@ -101,8 +102,7 @@ skeleton = NodePath("../..")
 
 [node name="Selector" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
-visible = false
-mesh = SubResource("TorusMesh_8yo7c")
+mesh = SubResource("TorusMesh_bb2oo")
 skeleton = NodePath("../..")
 
 [node name="Body" type="MeshInstance3D" parent="."]

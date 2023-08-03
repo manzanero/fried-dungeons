@@ -52,7 +52,7 @@ func _process(delta):
 	if is_move:
 		var transform_forward = Vector3.FORWARD.rotated(Vector3.UP, rotation.y)
 		var transform_left = Vector3.LEFT.rotated(Vector3.UP, rotation.y)
-		offset_move = offset_move * 0.015 * (zoom + 0.25)
+		offset_move = offset_move * 0.015 * (zoom + 0.5)
 		new_position += move_speed * (offset_move.y * transform_forward + offset_move.x * transform_left)
 		new_position.x = clamp(new_position.x, min_x, max_x)
 		new_position.z = clamp(new_position.z, min_z, max_z)

@@ -1,8 +1,8 @@
 extends Node
 
 
-func v3i_to_v2i(v3i : Vector3i) -> Vector2i:
-	return Vector2i(floor(v3i.x), floor(v3i.z))
+func v3_to_v2i(v3 : Vector3) -> Vector2i:
+	return Vector2i(floor(v3.x), floor(v3.z))
 
 
 func v3_to_v3i(v3 : Vector3) -> Vector3i:
@@ -34,7 +34,7 @@ func string_to_color(string : String) -> Color:
 	
 
 func get_bitmask(x : int) -> int:
-	return pow(2, x - 1)
+	return int(pow(2, x - 1))
 
 
 func read_json(json_file_path : String) -> Dictionary:

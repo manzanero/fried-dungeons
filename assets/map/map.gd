@@ -11,7 +11,7 @@ var min_z : int = 0
 var max_x : int = 0
 var max_y : int = 0
 var max_z : int = 0
-var skin_library := {}
+var ambient_light : int = 0
 var floors := {}
 var cells := {}
 var cells_queded := {}
@@ -44,21 +44,19 @@ var cell_pointed : Cell :
 		return cells.get(cell_pointed_position)
 
 
+@onready var library = $MapLibrary as MapLibrary
 @onready var solid_map = $SolidMap as GridMap
 @onready var entities_parent = $Entities as Node3D
+@onready var lights_parent = $Lights as Node3D
 @onready var map_theme := MapTheme.new()
 @onready var cell_raycast = PhysicsRayQueryParameters3D.new()
 @onready var entity_raycast = PhysicsRayQueryParameters3D.new()
+@onready var light_raycast = PhysicsRayQueryParameters3D.new()
 
 
 func _ready():
-	_load_library()
-
-
-func _load_library():
-	var skin_library_len = solid_map.mesh_library.get_item_list().size()
-	for i in range(skin_library_len):
-		skin_library[solid_map.mesh_library.get_item_name(i)] = i
+	library.load_library()
+	solid_map.mesh_library = library.meshes
 	
 	
 func _physics_process(delta):
@@ -79,12 +77,15 @@ func get_cell(cell_position : Vector3i) -> Cell:
 func set_cell(cell_position : Vector3i, cell : Cell):
 	if cell.is_in_view:
 		cells[cell_position] = cell
-		cell.is_explored = true
 	else:
 		cells_queded[cell_position] = cell
 		cell = get_cell(cell_position)
 	
-	solid_map.set_cell_item(cell_position, cell.code(skin_library), cell.orientation)
+	if not cell:
+		solid_map.set_cell_item(cell_position, -1, cell.orientation)
+		return
+	
+	solid_map.set_cell_item(cell_position, cell.code(cell_position), cell.orientation)
 		
 	if cell_position.y == 0:
 		floors[cell_position.y].set_transparent(Vector2i(cell_position.x, cell_position.z), cell.is_transparent)
@@ -119,7 +120,6 @@ func change_to_entity_eyes(entity):
 		reset_view(true)
 
 
-
 func reset_view(is_in_view):
 	for y in range(min_y, max_y):
 		for x in range(min_x, max_x):
@@ -143,23 +143,27 @@ func reset_explored():
 
 
 func update_view():
-	var c_x = entity_eyes.cell_position.x
-	var c_y = entity_eyes.cell_position.y
-	var c_z = entity_eyes.cell_position.z
+	if not entity_eyes:
+		return
 	
+	var c_x := entity_eyes.cell_position.x
+	var c_y := entity_eyes.cell_position.y
+	var c_z := entity_eyes.cell_position.z
+	
+	# unview cached cells
 	for cell_position in cache_cells:
 		if cell_position.y not in [c_y - 1, c_y] \
-		or cell_position.x not in range(c_x - RANGE, c_x + RANGE + 1) \
-		or cell_position.z not in range(c_z - RANGE, c_z + RANGE + 1):
-			var cell = cache_cells[cell_position]
+				or cell_position.x not in range(c_x - RANGE, c_x + RANGE + 1) \
+				or cell_position.z not in range(c_z - RANGE, c_z + RANGE + 1):
+			var cell : Cell = cache_cells[cell_position]
 			if cell.is_in_view:
 				cell.is_in_view = false
 				set_cell(cell_position, cell)
 		
 	cache_cells.clear()
 	
-	floors[0].clear_field_of_view()
-	floors[0].compute_field_of_view(Utils.v3i_to_v2i(entity_eyes.position), RANGE)
+	floors[c_y].clear_field_of_view()
+	floors[c_y].compute_field_of_view(Utils.v3_to_v2i(entity_eyes.position), RANGE)
 	
 	for y in [c_y - 1, c_y]:
 		for x in range(c_x - RANGE, c_x + RANGE + 1):
@@ -175,14 +179,18 @@ func update_view():
 				set_cell(cell_position, cell)
 
 
-func _process_cell_ray_hit():
+func _get_hit_info(raycast : PhysicsRayQueryParameters3D, collision_mask : int):
 	var ray_length = 1000
 	var mouse_pos = get_viewport().get_mouse_position()
 	var space_state = get_world_3d().direct_space_state
-	cell_raycast.from = Game.camera.camera.project_ray_origin(mouse_pos)
-	cell_raycast.to = cell_raycast.from + Game.camera.camera.project_ray_normal(mouse_pos) * ray_length
-	cell_raycast.collision_mask = Utils.get_bitmask(1)
-	var hit_info = space_state.intersect_ray(cell_raycast)
+	raycast.from = Game.camera.camera.project_ray_origin(mouse_pos)
+	raycast.to = raycast.from + Game.camera.camera.project_ray_normal(mouse_pos) * ray_length
+	raycast.collision_mask = collision_mask
+	return space_state.intersect_ray(raycast)
+
+
+func _process_cell_ray_hit():
+	var hit_info = _get_hit_info(cell_raycast, Utils.get_bitmask(1))
 	if hit_info:
 		is_cell_hovered = true
 		position_hovered = hit_info["position"] 
@@ -192,13 +200,15 @@ func _process_cell_ray_hit():
 
 
 func _process_entity_ray_hit():
-	var ray_length = 1000
-	var mouse_pos = get_viewport().get_mouse_position()
-	var space_state = get_world_3d().direct_space_state
-	entity_raycast.from = Game.camera.camera.project_ray_origin(mouse_pos)
-	entity_raycast.to = entity_raycast.from + Game.camera.camera.project_ray_normal(mouse_pos) * ray_length
-	entity_raycast.collision_mask = Utils.get_bitmask(2)
-	var hit_info = space_state.intersect_ray(entity_raycast)
+	var hit_info = _get_hit_info(cell_raycast, Utils.get_bitmask(2))
+	if hit_info:
+		entity_hovered = hit_info["collider"]
+	else:
+		entity_hovered = null
+
+
+func _process_light_ray_hit():
+	var hit_info = _get_hit_info(light_raycast, Utils.get_bitmask(3))
 	if hit_info:
 		entity_hovered = hit_info["collider"]
 	else:
@@ -248,46 +258,113 @@ func _process_preview_move(delta):
 # Objects #
 ###########
 
-var RANGE = 10
-const FILL = "Fill0"
-const COVER = "Cover0"
+var RANGE := 10
+const FILL := "Fill0"
+const COVER := "Cover0"
 
 
 class MapTheme:
-	var floor = "Stone1"
-	var wall = "Brick1"
-	var door_closed = "Door0"
-	var door_open = "Door1"
+	var floor := "Stone0"
+	var wall := "Brick1"
+	var door_closed := "Door0"
+	var door_open := "Door1"
 	
 
 class Cell:
+	var map : Map
 	var skin : String
 	var donjon_code : int
 	var orientation : int
+	var emission : int
+	var is_empty : bool
+	var is_transparent : bool
+	var is_door : bool
+	var is_open : bool
+	var is_locked : bool
 	
 	var is_queued : bool
 	var is_in_view : bool
 	var is_explored : bool
+	var lights : Array[Light] = []
 	
-	var is_empty : bool
-	var is_transparent : bool
+	var light_intensity : int = 0 : get = _get_light_intensity
+	var light_fixture : Color = Color.WHITE : get = _get_light_fixture
 	
-	var is_door : bool
-	var is_open : bool
-	var is_locked : bool
+	
+	func _init(p_map):
+		map = p_map
+
+
+	func code(cell_position : Vector3i) -> int:
+
+		if map.lights_parent.get_children():
+			lights = [map.lights_parent.get_node("0")]
 		
-	func code(skin_library : Dictionary) -> int:
+		light_intensity = 0
 		if is_in_view:
-			return skin_library.get(skin, -1) 
-		elif is_explored and not is_empty and Game.is_high_end:
-			return skin_library.get(FILL)
+			for light in lights:
+				light_intensity += light.get_intensity(cell_position)
+				
+			if light_intensity:
+				is_explored = true
+				var light_str = str(snappedi(light_intensity - 10, 20))
+				return map.solid_map.mesh_library.find_item_by_name(light_str + skin)
+
+		if is_explored and Game.is_high_end:
+			return map.solid_map.mesh_library.find_item_by_name('x' + skin)
+			
 		return -1
 	
+	func _get_light_intensity() -> int:
+		var is_master_ambient_light_enabled := Game.is_host and not map.entity_eyes
+		var master_ambient_light := 20 if is_master_ambient_light_enabled else 0
+		return clamp(max(map.ambient_light, emission, light_intensity), master_ambient_light, 100)
+	
+	
+	func _get_light_fixture():
+		var value = Color.WHITE * light_intensity / 100
+		value.a = 1
+		return value
+	
+
+func serialize_cell(cell_position : Vector3i, cell : Cell) -> Dictionary:
+	var serialized_cell = {}
+	serialized_cell["x"] = cell_position.x
+	serialized_cell["y"] = cell_position.y
+	serialized_cell["z"] = cell_position.z
+	if cell.skin:
+		serialized_cell["s"] = solid_map.mesh_library.find_item_by_name(cell.skin) 
+	if cell.orientation:
+		serialized_cell["o"] = cell.orientation
+	if cell.is_empty:
+		serialized_cell["e"] = 1
+	if cell.is_transparent:
+		serialized_cell["t"] = 1
+	if cell.is_door:
+		serialized_cell["door"] = 1
+	if cell.is_open:
+		serialized_cell["open"] = 1
+	if cell.is_locked:
+		serialized_cell["locked"] = 1
+	return serialized_cell
+		
+	
+func deserialize_cell(serialized_cell : Dictionary) -> Cell:
+	var cell = Cell.new(self)
+	var skin = serialized_cell.get("s")
+	cell.skin = solid_map.mesh_library.get_item_name(skin) if skin else ""
+	cell.orientation = serialized_cell.get("o", 0)
+	cell.is_empty = bool(serialized_cell.get("e", 0))
+	cell.is_transparent = bool(serialized_cell.get("t", 0))
+	cell.is_door = bool(serialized_cell.get("door", 0))
+	cell.is_open = bool(serialized_cell.get("open", 0))
+	cell.is_locked = bool(serialized_cell.get("locked", 0))
+	return cell
+
 
 #########
 # Utils #
 #########
-
 
 func _load_donjon_json_file(json_file_path):
 	print("Loading donjon map: " + json_file_path)
@@ -315,7 +392,7 @@ func _load_donjon_json_file(json_file_path):
 				var cell_is_wall = int(donjon_code) in [0, 16]
 				var cell_is_door = int(donjon_code) in [131076]
 				
-				var cell = Cell.new()
+				var cell = Cell.new(self)
 				cell.donjon_code = donjon_code
 				match y:
 					-1:
@@ -340,63 +417,13 @@ func _load_donjon_json_file(json_file_path):
 func _load_fried_json_file(json_file_path):
 	var serialized_map = Utils.read_json(json_file_path)
 	deserialize(serialized_map)
-
-
-func deserialize(serialized_map : Dictionary):
-	name = serialized_map['id']
-	label = serialized_map['label']
-	min_x = serialized_map['from'][0]
-	min_y = serialized_map['from'][1]
-	min_z = serialized_map['from'][2]
-	max_x = serialized_map['to'][0]
-	max_y = serialized_map['to'][1]
-	max_z = serialized_map['to'][2]
-	
-	floors[0] = MRPAS.new(Vector2(max_x - min_x, max_z - min_z ))
-	
-	for serialized_cell in serialized_map['cells']:
-		var cell_position = Vector3i(
-			serialized_cell["x"], 
-			serialized_cell["y"], 
-			serialized_cell["z"])
-		var cell = Cell.new()
-		var skin = serialized_cell.get("s")
-		cell.skin = solid_map.mesh_library.get_item_name(skin) if skin else ""
-		cell.orientation = serialized_cell.get("o", 0)
-		cell.is_empty = bool(serialized_cell.get("e", 0))
-		cell.is_transparent = bool(serialized_cell.get("t", 0))
-		cell.is_door = bool(serialized_cell.get("door", 0))
-		cell.is_open = bool(serialized_cell.get("open", 0))
-		cell.is_locked = bool(serialized_cell.get("locked", 0))
-		set_cell(cell_position, cell)
-	
-	for serialized_entity in serialized_map['entities']:
-		Game.world.new_command(Game.world.OpCode.NEW_ENTITY, serialized_entity)
 	
 
-func serialize() -> Dictionary:	
+func serialize() -> Dictionary:
 	var serialized_cells = []
 	for cell_position in cells:
-		var serialized_cell = {}
 		var cell : Cell = cells[cell_position]
-		serialized_cell["x"] = cell_position.x
-		serialized_cell["y"] = cell_position.y
-		serialized_cell["z"] = cell_position.z
-		if cell.skin:
-			serialized_cell["s"] = skin_library.get(cell.skin, -1) 
-		if cell.orientation:
-			serialized_cell["o"] = cell.orientation
-		if cell.is_empty:
-			serialized_cell["e"] = 1
-		if cell.is_transparent:
-			serialized_cell["t"] = 1
-		if cell.is_door:
-			serialized_cell["door"] = 1
-		if cell.is_open:
-			serialized_cell["open"] = 1
-		if cell.is_locked:
-			serialized_cell["locked"] = 1
-		serialized_cells.append(serialized_cell)
+		serialized_cells.append(serialize_cell(cell_position, cell))
 		
 	var serialized_entities = []
 	for entity in entities_parent.get_children():
@@ -422,3 +449,28 @@ func serialize() -> Dictionary:
 	}
 	
 	return serialized_map
+
+
+func deserialize(serialized_map : Dictionary):
+	name = serialized_map['id']
+	label = serialized_map['label']
+	min_x = serialized_map['from'][0]
+	min_y = serialized_map['from'][1]
+	min_z = serialized_map['from'][2]
+	max_x = serialized_map['to'][0]
+	max_y = serialized_map['to'][1]
+	max_z = serialized_map['to'][2]
+	
+	for y in range(min_y + 1, max_y):
+		floors[y] = MRPAS.new(Vector2(max_x - min_x, max_z - min_z ))
+	
+	for serialized_cell in serialized_map['cells']:
+		var cell_position = Vector3i(
+			serialized_cell["x"], 
+			serialized_cell["y"], 
+			serialized_cell["z"])
+		var cell = deserialize_cell(serialized_cell)
+		set_cell(cell_position, cell)
+	
+	for serialized_entity in serialized_map['entities']:
+		Game.world.new_command(Game.world.OpCode.NEW_ENTITY, serialized_entity)

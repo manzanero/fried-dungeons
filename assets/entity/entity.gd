@@ -15,6 +15,7 @@ var health_known := false : set = _set_health_known
 var base_size := 0.5 : set = _set_base_size
 var base_color := Color.WHITE : set = _set_base_color
 var texture_path : String = "None" : set = _set_texture
+var body_tint := Color.WHITE : set = _set_body_tint
 
 const SPEED := 250.0
 
@@ -31,6 +32,7 @@ var target_position : Vector3 :
 		moving_to_target = true
 
 var is_in_view : bool
+var light_fixture : Color
 var is_selected : bool : 
 	get:
 		return selector.visible
@@ -75,7 +77,9 @@ func _physics_process(delta):
 		position = position.move_toward(target_position, velocity_to_target)
 		if position == target_position:
 			moving_to_target = false
-			
+			if self == Game.world.map.entity_eyes:
+				Game.world.map.update_view()
+				
 	elif Game.world.map and Game.world.map.entity_eyes == self:
 		_move_process(delta)
 	
@@ -107,12 +111,16 @@ func validate_position(fallback_position := Vector3(0, 0, 0)):
 		position = fallback_position
 		return
 	
-	if cell.is_door and not cell.is_locked:
+	if cell.is_door and not cell.is_open and not cell.is_locked:
 		cell.skin = 'Door1'
 		cell.is_empty = true
 		cell.is_transparent = true
 		cell.is_open = true
 		Game.world.map.set_cell(cell_position, cell)
+		Server.send_message(Game.world.OpCode.SET_CELLS, {
+			"cells": [Game.world.map.serialize_cell(cell_position, cell)]
+		})
+		
 		
 	if cell.is_empty:
 		return 
@@ -133,17 +141,22 @@ func _update():
 
 	# calculate if entity is visible
 	var cell = get_cell()
-	if cell:
+	if cell and cell.light_fixture != Color.BLACK:
 		if cell.is_in_view != is_in_view:
 			is_in_view = cell.is_in_view
 			visible = is_in_view
 			label_control.visible = is_in_view
+			
+		if cell.light_fixture != light_fixture:
+			light_fixture = cell.light_fixture
+			base.mesh.surface_get_material(0).albedo_color = base_color * light_fixture
+			body.get_surface_override_material(0).albedo_color = body_tint * light_fixture
+	
 	else:
 		is_in_view = false
 		visible = false
 		label_control.visible = false
 		
-	
 	if moving_to_target:
 		return
 	
@@ -162,6 +175,8 @@ func _update():
 
 
 func change(kwargs):
+	
+	# TODO: remove this
 	if kwargs["id"] in Game.public_entities:
 		label_known = true
 		health_known = true
@@ -244,3 +259,8 @@ func _set_texture(value):
 		body.texture = null
 		body.mesh = null
 		body.material_override = null
+
+
+func _set_body_tint(value):
+	body_tint = value
+	body.get_surface_override_material(0).albedo_color = body_tint

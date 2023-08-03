@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://tvgxpo8pyj5y"]
+[gd_scene load_steps=23 format=3 uid="uid://tvgxpo8pyj5y"]
 
 [ext_resource type="ArrayMesh" uid="uid://dokvt0u08buvd" path="res://resources/mesh_libraries/solids/dirt0.vox" id="1_ep5yb"]
 [ext_resource type="ArrayMesh" uid="uid://bq7s51tv57x38" path="res://resources/mesh_libraries/solids/stone0.vox" id="2_ogk0c"]
@@ -13,92 +13,46 @@
 [ext_resource type="ArrayMesh" uid="uid://cy5lgxgojh4lm" path="res://resources/mesh_libraries/solids/stained0.vox" id="11_l4os0"]
 [ext_resource type="ArrayMesh" uid="uid://bw8saqpppo4cp" path="res://resources/mesh_libraries/solids/glass0.vox" id="12_ppaym"]
 [ext_resource type="ArrayMesh" uid="uid://ciybo6phruic0" path="res://resources/mesh_libraries/solids/wood0.vox" id="13_2bkl2"]
+[ext_resource type="Shader" path="res://resources/mesh_libraries/solids.gdshader" id="13_u0laj"]
 [ext_resource type="ArrayMesh" uid="uid://cd55s7i24iroe" path="res://resources/mesh_libraries/solids/stone1.vox" id="14_df6f5"]
 [ext_resource type="ArrayMesh" uid="uid://bvdehh33kvbq1" path="res://resources/mesh_libraries/solids/door0.vox" id="15_1oc6x"]
 [ext_resource type="ArrayMesh" uid="uid://bdkqstuhwbybk" path="res://resources/mesh_libraries/solids/door1.vox" id="16_v2o1k"]
-[ext_resource type="Texture2D" uid="uid://cxbtsdgutvbxp" path="res://resources/meshes/block/fried-dungeons_Image_0.png" id="17_6m5vd"]
-[ext_resource type="Texture2D" uid="uid://bvpqiobtnear4" path="res://resources/meshes/block/fried-dungeons_0.png" id="17_lmopf"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lcni0"]
+render_priority = 0
+shader = ExtResource("13_u0laj")
+shader_parameter/is_in_view = true
+shader_parameter/intensity = 1.0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_r3jin"]
 resource_local_to_scene = true
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_whgy3"]
-shading_mode = 2
-vertex_color_use_as_albedo = true
-vertex_color_is_srgb = true
-disable_receive_shadows = true
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ljfed"]
+render_priority = 0
+shader = ExtResource("13_u0laj")
+shader_parameter/is_in_view = true
+shader_parameter/intensity = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w0ppg"]
+render_priority = 0
+shader = ExtResource("13_u0laj")
+shader_parameter/is_in_view = true
+shader_parameter/intensity = 1.0
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dmqc6"]
 transparency = 1
 vertex_color_use_as_albedo = true
 albedo_color = Color(1, 1, 1, 0.501961)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0fxjn"]
-shading_mode = 2
-vertex_color_use_as_albedo = true
-vertex_color_is_srgb = true
-ao_light_affect = 1.0
-ao_on_uv2 = true
-disable_receive_shadows = true
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rnyf1"]
-resource_name = "Material_0"
-transparency = 2
-alpha_scissor_threshold = 0.05
-alpha_antialiasing_mode = 0
-cull_mode = 2
-vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("17_6m5vd")
-texture_filter = 2
-texture_repeat = false
-
-[sub_resource type="ArrayMesh" id="ArrayMesh_n8tmg"]
-_surfaces = [{
-"aabb": AABB(-0.499999, -0.5, -0.5, 1.00001, 1.00001, 1),
-"format": 4097,
-"index_count": 72,
-"index_data": PackedByteArray(2, 0, 1, 0, 0, 0, 2, 0, 3, 0, 1, 0, 6, 0, 5, 0, 4, 0, 6, 0, 7, 0, 5, 0, 1, 0, 5, 0, 0, 0, 1, 0, 4, 0, 5, 0, 2, 0, 6, 0, 3, 0, 2, 0, 7, 0, 6, 0, 3, 0, 4, 0, 1, 0, 3, 0, 6, 0, 4, 0, 7, 0, 0, 0, 5, 0, 7, 0, 2, 0, 0, 0, 10, 0, 9, 0, 8, 0, 10, 0, 11, 0, 9, 0, 14, 0, 13, 0, 12, 0, 14, 0, 15, 0, 13, 0, 9, 0, 13, 0, 8, 0, 9, 0, 12, 0, 13, 0, 10, 0, 14, 0, 11, 0, 10, 0, 15, 0, 14, 0, 11, 0, 12, 0, 9, 0, 11, 0, 14, 0, 12, 0, 15, 0, 8, 0, 13, 0, 15, 0, 10, 0, 8, 0),
-"name": "Material_0",
-"primitive": 3,
-"vertex_count": 16,
-"vertex_data": PackedByteArray(0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 191, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 63, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 63, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 191, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 63, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 191, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 190)
-}]
-blend_shape_mode = 0
-
-[sub_resource type="ArrayMesh" id="ArrayMesh_58fdc"]
-resource_name = "fried-dungeons_Mesh_0"
-_surfaces = [{
-"aabb": AABB(-0.499999, -0.5, -0.5, 1.00001, 1.00001, 1),
-"attribute_data": PackedByteArray(0, 0, 32, 62, 0, 0, 32, 62, 0, 0, 0, 0, 0, 0, 32, 62, 0, 0, 32, 62, 0, 0, 160, 62, 0, 0, 0, 0, 0, 0, 160, 62, 0, 0, 240, 62, 0, 0, 32, 62, 0, 0, 160, 62, 0, 0, 32, 62, 0, 0, 240, 62, 0, 0, 160, 62, 0, 0, 160, 62, 0, 0, 160, 62, 0, 0, 32, 62, 0, 0, 32, 62, 0, 0, 160, 62, 0, 0, 32, 62, 0, 0, 32, 62, 0, 0, 0, 0, 0, 0, 160, 62, 0, 0, 0, 0, 0, 0, 160, 62, 0, 0, 0, 0, 0, 0, 240, 62, 0, 0, 0, 0, 0, 0, 160, 62, 0, 0, 32, 62, 0, 0, 240, 62, 0, 0, 32, 62, 0, 0, 32, 63, 0, 0, 32, 62, 0, 0, 240, 62, 0, 0, 32, 62, 0, 0, 32, 63, 0, 0, 160, 62, 0, 0, 240, 62, 0, 0, 160, 62, 0, 0, 160, 62, 0, 0, 32, 62, 0, 0, 32, 62, 0, 0, 32, 62, 0, 0, 160, 62, 0, 0, 160, 62, 0, 0, 32, 62, 0, 0, 160, 62, 0, 0, 48, 62, 0, 0, 224, 62, 0, 0, 64, 61, 0, 0, 224, 62, 0, 0, 48, 62, 0, 0, 16, 63, 0, 0, 64, 61, 0, 0, 16, 63, 0, 0, 216, 62, 0, 0, 224, 62, 0, 0, 152, 62, 0, 0, 224, 62, 0, 0, 216, 62, 0, 0, 16, 63, 0, 0, 152, 62, 0, 0, 16, 63, 0, 0, 48, 62, 0, 0, 224, 62, 0, 0, 152, 62, 0, 0, 224, 62, 0, 0, 48, 62, 0, 0, 160, 62, 0, 0, 152, 62, 0, 0, 160, 62, 0, 0, 152, 62, 0, 0, 160, 62, 0, 0, 216, 62, 0, 0, 160, 62, 0, 0, 152, 62, 0, 0, 224, 62, 0, 0, 216, 62, 0, 0, 224, 62, 0, 0, 12, 63, 0, 0, 224, 62, 0, 0, 216, 62, 0, 0, 224, 62, 0, 0, 12, 63, 0, 0, 16, 63, 0, 0, 216, 62, 0, 0, 16, 63, 0, 0, 152, 62, 0, 0, 224, 62, 0, 0, 48, 62, 0, 0, 224, 62, 0, 0, 152, 62, 0, 0, 16, 63, 0, 0, 48, 62, 0, 0, 16, 63),
-"format": 4119,
-"index_count": 72,
-"index_data": PackedByteArray(2, 0, 1, 0, 0, 0, 2, 0, 3, 0, 1, 0, 6, 0, 5, 0, 4, 0, 6, 0, 7, 0, 5, 0, 10, 0, 9, 0, 8, 0, 10, 0, 11, 0, 9, 0, 14, 0, 13, 0, 12, 0, 14, 0, 15, 0, 13, 0, 18, 0, 17, 0, 16, 0, 18, 0, 19, 0, 17, 0, 22, 0, 21, 0, 20, 0, 22, 0, 23, 0, 21, 0, 26, 0, 25, 0, 24, 0, 26, 0, 27, 0, 25, 0, 30, 0, 29, 0, 28, 0, 30, 0, 31, 0, 29, 0, 34, 0, 33, 0, 32, 0, 34, 0, 35, 0, 33, 0, 38, 0, 37, 0, 36, 0, 38, 0, 39, 0, 37, 0, 42, 0, 41, 0, 40, 0, 42, 0, 43, 0, 41, 0, 46, 0, 45, 0, 44, 0, 46, 0, 47, 0, 45, 0),
-"material": SubResource("StandardMaterial3D_rnyf1"),
-"name": "Material_0",
-"primitive": 3,
-"vertex_count": 48,
-"vertex_data": PackedByteArray(0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 191, 255, 255, 255, 127, 255, 255, 255, 255, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 63, 255, 255, 255, 127, 255, 255, 255, 255, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 191, 255, 255, 255, 127, 255, 255, 255, 255, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 63, 255, 255, 255, 127, 255, 255, 255, 255, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 255, 127, 255, 127, 255, 191, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 255, 127, 255, 127, 255, 191, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 63, 0, 0, 255, 127, 255, 127, 255, 191, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 191, 0, 0, 255, 127, 255, 127, 255, 191, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 191, 255, 127, 255, 255, 0, 0, 255, 191, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 191, 255, 127, 255, 255, 0, 0, 255, 191, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 63, 255, 127, 255, 255, 0, 0, 255, 191, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 63, 255, 127, 255, 255, 0, 0, 255, 191, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 63, 255, 127, 0, 0, 0, 0, 255, 63, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 63, 255, 127, 0, 0, 0, 0, 255, 63, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 191, 255, 127, 0, 0, 0, 0, 255, 63, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 191, 255, 127, 0, 0, 0, 0, 255, 63, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 63, 255, 127, 255, 127, 255, 255, 255, 191, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 63, 255, 127, 255, 127, 255, 255, 255, 191, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 63, 255, 127, 255, 127, 255, 255, 255, 191, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 63, 255, 127, 255, 127, 255, 255, 255, 191, 232, 255, 255, 190, 0, 0, 0, 63, 0, 0, 0, 191, 255, 255, 255, 255, 0, 0, 255, 191, 0, 0, 0, 63, 0, 0, 0, 63, 0, 0, 0, 191, 255, 255, 255, 255, 0, 0, 255, 191, 232, 255, 255, 190, 0, 0, 0, 191, 0, 0, 0, 191, 255, 255, 255, 255, 0, 0, 255, 191, 0, 0, 0, 63, 0, 0, 0, 191, 0, 0, 0, 191, 255, 255, 255, 255, 0, 0, 255, 191, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 190, 255, 255, 255, 127, 255, 255, 255, 255, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 62, 255, 255, 255, 127, 255, 255, 255, 255, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 190, 255, 255, 255, 127, 255, 255, 255, 255, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 62, 255, 255, 255, 127, 255, 255, 255, 255, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 62, 0, 0, 255, 127, 255, 127, 255, 191, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 190, 0, 0, 255, 127, 255, 127, 255, 191, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 62, 0, 0, 255, 127, 255, 127, 255, 191, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 190, 0, 0, 255, 127, 255, 127, 255, 191, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 190, 255, 127, 255, 255, 0, 0, 255, 191, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 190, 255, 127, 255, 255, 0, 0, 255, 191, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 62, 255, 127, 255, 255, 0, 0, 255, 191, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 62, 255, 127, 255, 255, 0, 0, 255, 191, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 62, 255, 127, 0, 0, 0, 0, 255, 63, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 62, 255, 127, 0, 0, 0, 0, 255, 63, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 190, 255, 127, 0, 0, 0, 0, 255, 63, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 190, 255, 127, 0, 0, 0, 0, 255, 63, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 62, 255, 127, 255, 127, 255, 255, 255, 191, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 62, 255, 127, 255, 127, 255, 255, 255, 191, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 62, 255, 127, 255, 127, 255, 255, 255, 191, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 62, 255, 127, 255, 127, 255, 255, 255, 191, 152, 192, 245, 190, 152, 192, 245, 62, 152, 192, 245, 190, 255, 255, 255, 255, 0, 0, 255, 191, 152, 192, 245, 62, 152, 192, 245, 62, 152, 192, 245, 190, 255, 255, 255, 255, 0, 0, 255, 191, 152, 192, 245, 190, 152, 192, 245, 190, 152, 192, 245, 190, 255, 255, 255, 255, 0, 0, 255, 191, 152, 192, 245, 62, 152, 192, 245, 190, 152, 192, 245, 190, 255, 255, 255, 255, 0, 0, 255, 191)
-}]
-blend_shape_mode = 0
-shadow_mesh = SubResource("ArrayMesh_n8tmg")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g7sxm"]
-resource_name = "Material_0"
-transparency = 2
-alpha_scissor_threshold = 0.05
-alpha_antialiasing_mode = 0
-cull_mode = 2
-vertex_color_use_as_albedo = true
-albedo_texture = ExtResource("17_lmopf")
-texture_filter = 4
-texture_repeat = false
-
 [node name="Solids" type="Node3D"]
 
 [node name="Dirt0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.26021)
 mesh = ExtResource("1_ep5yb")
+surface_material_override/0 = SubResource("ShaderMaterial_lcni0")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Dirt0"]
+visible = false
 collision_mask = 0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Dirt0/StaticBody3D"]
@@ -147,9 +101,8 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Brick1" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.86678, 0, 1.96028)
 cast_shadow = 0
-gi_mode = 0
 mesh = ExtResource("6_ey34p")
-surface_material_override/0 = SubResource("StandardMaterial3D_whgy3")
+surface_material_override/0 = SubResource("ShaderMaterial_ljfed")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Brick1"]
 collision_mask = 0
@@ -200,6 +153,7 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Stained0" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.8619, 4.76837e-07, 0.209666)
 mesh = ExtResource("11_l4os0")
+surface_material_override/0 = SubResource("ShaderMaterial_w0ppg")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Stained0"]
 collision_mask = 0
@@ -230,12 +184,10 @@ shape = SubResource("BoxShape3D_r3jin")
 
 [node name="Stone1" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.99358, 0, 1.6068)
-cast_shadow = 0
-gi_mode = 0
 mesh = ExtResource("14_df6f5")
-surface_material_override/0 = SubResource("StandardMaterial3D_0fxjn")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Stone1"]
+visible = false
 collision_mask = 0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Stone1/StaticBody3D"]
@@ -248,9 +200,3 @@ mesh = ExtResource("15_1oc6x")
 [node name="Door1" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.3099, -4.76837e-07, 1.82066)
 mesh = ExtResource("16_v2o1k")
-
-[node name="Brick3" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7589, 4.76837e-07, 4.8592)
-mesh = SubResource("ArrayMesh_58fdc")
-skeleton = NodePath("")
-surface_material_override/0 = SubResource("StandardMaterial3D_g7sxm")
