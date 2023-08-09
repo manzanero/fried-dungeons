@@ -69,6 +69,24 @@ func _process(delta):
 		camera.position.z = lerp(camera.position.z, zoom, zoom_speed * delta)
 
 
+func _input(event):
+
+	# Mouse
+	if event is InputEventMouseMotion:
+		if is_rotate or is_move:
+			offset_move += event.relative
+
+	elif event is InputEventMouseButton:
+		if event.is_released():
+			if event.button_index == MOUSE_BUTTON_MIDDLE:
+				is_rotate = false
+			if event.button_index == MOUSE_BUTTON_RIGHT:
+				is_move = false
+				
+			if not is_rotate and not is_move:
+				is_operated = false
+
+
 func _unhandled_input(event):
 	
 	# Touch
@@ -90,19 +108,15 @@ func _unhandled_input(event):
 		zoom += offset_zoom
 		zoom = clamp(zoom, min_zoom, max_zoom)
 	
-	# Mouse
-	elif event is InputEventMouseMotion:
-		if is_rotate or is_move:
-			offset_move += event.relative
-			is_operated = true
-	
 	elif event is InputEventMouseButton:
 		
 		if event.is_pressed():
 			if event.button_index == MOUSE_BUTTON_MIDDLE:
+				is_operated = true
 				is_rotate = true
 				is_move = false
 			if event.button_index == MOUSE_BUTTON_RIGHT:
+				is_operated = true
 				is_rotate = false
 				is_move = true
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -111,11 +125,3 @@ func _unhandled_input(event):
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				zoom += zoom_step * (zoom + 0.25)
 				zoom = clamp(zoom, min_zoom, max_zoom)
-		if event.is_released():
-			if event.button_index == MOUSE_BUTTON_MIDDLE:
-				is_rotate = false
-			if event.button_index == MOUSE_BUTTON_RIGHT:
-				is_move = false
-				
-			if not is_rotate and not is_move:
-				is_operated = false

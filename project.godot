@@ -99,6 +99,7 @@ locale/translations=PackedStringArray("res://localization/translations.en.transl
 3d_physics/layer_1="solid_map"
 3d_physics/layer_2="entity"
 3d_physics/layer_3="light"
+3d_physics/layer_4="ground"
 
 [rendering]
 

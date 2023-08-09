@@ -351,7 +351,7 @@ anchor_bottom = 0.5
 offset_left = -210.0
 offset_top = -60.0
 offset_right = -5.0
-offset_bottom = 131.0
+offset_bottom = 161.0
 grow_horizontal = 0
 grow_vertical = 2
 
@@ -384,6 +384,12 @@ layout_mode = 2
 text = "New Entity +"
 alignment = 0
 
+[node name="NewLight" type="Button" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "New Light +"
+alignment = 0
+
 [node name="TotalVision" type="Button" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -403,54 +409,6 @@ size_flags_vertical = 8
 theme = ExtResource("8_nqa4r")
 text = "Save & Exit"
 alignment = 0
-
-[node name="EntityContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 0
-offset_right = 112.0
-offset_bottom = 80.0
-
-[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/EntityContextualMenu"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -40.0
-offset_right = 42.0
-tab_count = 1
-tab_0/title = "Entity"
-
-[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/EntityContextualMenu"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
-
-[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer"]
-layout_mode = 2
-
-[node name="EditButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Edit
-"
-
-[node name="InfoButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
-visible = false
-layout_mode = 2
-text = "Info
-
-"
-
-[node name="VisionButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Vision"
 
 [node name="CellContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
 unique_name_in_owner = true
@@ -500,9 +458,92 @@ visible = false
 layout_mode = 2
 text = "Actions"
 
-[node name="StaticBody3D" type="StaticBody3D" parent="."]
-collision_layer = 4
+[node name="LightContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 42.0
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/LightContextualMenu"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = -40.0
+offset_right = 74.0
+tab_count = 1
+tab_0/title = "Light"
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/LightContextualMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/LightContextualMenu/MarginContainer"]
+layout_mode = 2
+
+[node name="LightEditButton" type="Button" parent="HUDCanvas/HUD/LightContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Edit
+"
+
+[node name="EntityContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 80.0
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/EntityContextualMenu"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = -40.0
+offset_right = 42.0
+tab_count = 1
+tab_0/title = "Entity"
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/EntityContextualMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer"]
+layout_mode = 2
+
+[node name="EntityEditButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Edit
+"
+
+[node name="EntityInfoButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+text = "Info
+
+"
+
+[node name="EntityVisionButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Vision"
+
+[node name="GroundCollider" type="StaticBody3D" parent="."]
+collision_layer = 8
 collision_mask = 0
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundCollider"]
 shape = SubResource("WorldBoundaryShape3D_4ikmk")

@@ -2,11 +2,13 @@ class_name World
 extends Node3D
 
 var map_scene = preload("res://assets/map/map.tscn")
-var entity_scene = preload("res://assets/entity/entity.tscn")
 var light_scene = preload("res://assets/light/light.tscn")
+var entity_scene = preload("res://assets/entity/entity.tscn")
+var light_menu_scene = preload("res://assets/menus/light/light_menu.tscn")
 var entity_menu_scene = preload("res://assets/menus/entity/entity_menu.tscn")
 
 var tick := 0.1
+var selected_light : Light
 var selected_entity : Entity
 
 @onready var maps_parent := $Maps as Node3D
@@ -21,6 +23,7 @@ var selected_entity : Entity
 
 @onready var commands_panel := %CommandsPanel as Panel
 @onready var new_entity_button := %NewEntity as Button
+@onready var new_light_button := %NewLight as Button
 @onready var total_vision_button := %TotalVision as Button
 @onready var forget_explored_button := %ForgetExplored as Button
 @onready var save_exit_button := %SaveExit as Button
@@ -29,9 +32,12 @@ var selected_entity : Entity
 @onready var cell_edit_button := %CellEditButton as Button
 @onready var cell_edit_panel := %CellEditPanel as Panel
 
+@onready var light_contextual_menu := %LightContextualMenu as Panel
+@onready var light_edit_button := %LightEditButton as Button
+
 @onready var entity_contextual_menu := %EntityContextualMenu as Panel
-@onready var entity_edit_button := %EditButton as Button
-@onready var entity_vision_button := %VisionButton as Button
+@onready var entity_edit_button := %EntityEditButton as Button
+@onready var entity_vision_button := %EntityVisionButton as Button
 @onready var command_queue : Array[Command] = [] 
 @onready var map : Map = null
 
@@ -58,6 +64,7 @@ func _ready():
 	pointer.pointing = false
 	
 	new_entity_button.pressed.connect(_on_new_entity_button_pressed)
+	new_light_button.pressed.connect(_on_new_light_button_pressed)
 	total_vision_button.pressed.connect(_on_total_vision_button_pressed)
 	forget_explored_button.pressed.connect(_on_forget_explored_button_pressed)
 	save_exit_button.pressed.connect(_on_save_exit_button_button_pressed)
@@ -65,6 +72,9 @@ func _ready():
 	cell_contextual_menu.visible = false
 	cell_edit_panel.visible = false
 	cell_edit_button.pressed.connect(_on_cell_edit_button_pressed)
+	
+	light_contextual_menu.visible = false
+	light_edit_button.pressed.connect(_on_light_edit_button_pressed)
 	
 	entity_contextual_menu.visible = false
 	entity_edit_button.pressed.connect(_on_entity_edit_button_pressed)
@@ -131,6 +141,13 @@ func _on_cell_edit_button_pressed():
 	cell_contextual_menu.visible = false
 
 
+func _on_light_edit_button_pressed():
+	var light_menu = light_menu_scene.instantiate()
+	light_menu.use_light(selected_light)
+	$HUDCanvas/HUD/Midde.add_child(light_menu)
+	light_contextual_menu.visible = false
+
+
 func _on_entity_edit_button_pressed():
 	var entity_menu = entity_menu_scene.instantiate()
 	entity_menu.use_entity(selected_entity)
@@ -149,6 +166,13 @@ func _on_new_entity_button_pressed():
 	$HUDCanvas/HUD/Midde.add_child(entity_menu)
 	entity_menu.id_edit.text = UUID.short()
 	entity_menu.position = Vector2(0, -entity_menu.size.y / 2)
+
+		
+func _on_new_light_button_pressed():
+	var light_menu = light_menu_scene.instantiate()
+	$HUDCanvas/HUD/Midde.add_child(light_menu)
+	light_menu.id_edit.text = UUID.short()
+	light_menu.position = Vector2(0, -light_menu.size.y / 2)
 	
 	
 func _on_total_vision_button_pressed():
@@ -173,36 +197,47 @@ func _unhandled_input(event):
 		
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.is_pressed():
+				
+				cell_contextual_menu.visible = false
+				light_contextual_menu.visible = false
+				entity_contextual_menu.visible = false
 					
 				# cell selection
-				if map.is_cell_hovered and not map.entity_hovered:
+				if map.is_cell_hovered and not map.entity_hovered and not map.light_hovered:
 					pointer.pointing = true
 					pointer.move_to(map.cell_pointed_position)
+					selected_light = null
 					selected_entity = null
 					
 					if event.double_click:
-						entity_contextual_menu.visible = false
 						cell_contextual_menu.visible = true
 						cell_contextual_menu.position = event.position
-					else:
-						cell_contextual_menu.visible = false
-						entity_contextual_menu.visible = false
 					
 				else:
 					pointer.pointing = false
 						
-				# entity selection
-				if map.entity_hovered:
+				# light selection
+				if map.light_hovered and not map.entity_hovered:
 					pointer.pointing = false
+					selected_light = map.light_hovered
+					selected_entity = null
+					
+					if event.double_click:
+						light_contextual_menu.visible = true
+						light_contextual_menu.position = event.position
+						
+				else:
+					selected_light = null
+						
+				# entity selection
+				if map.entity_hovered and not map.light_hovered:
+					pointer.pointing = false
+					selected_light = null
 					selected_entity = map.entity_hovered
 					
 					if event.double_click:
-						cell_contextual_menu.visible = false
 						entity_contextual_menu.visible = true
 						entity_contextual_menu.position = event.position
-					else:
-						cell_contextual_menu.visible = false
-						entity_contextual_menu.visible = false
 						
 				else:
 					selected_entity = null
@@ -224,11 +259,13 @@ enum OpCode {
 	SET_ENTITY_TARGET_POSITION,
 	SET_CELLS,
 	NEW_LIGHT,
+	CHANGE_LIGHT,
+	DELETE_LIGHT,
 	SET_LIGHT_POSITION,
 }
 
 
-func execute_command(command):
+func execute_command(command : Command):
 	match command.op_code:
 		OpCode.MESSAGE: 
 			_command_message(command.kwargs)
@@ -247,18 +284,22 @@ func execute_command(command):
 		OpCode.SET_ENTITY_TARGET_POSITION: 
 			_command_set_entity_target_position(command.kwargs)
 		OpCode.SET_CELLS: 
-			_command_set_cells_position(command.kwargs)
+			_command_set_cells(command.kwargs)
 		OpCode.NEW_LIGHT: 
 			_command_new_light(command.kwargs)
+		OpCode.CHANGE_LIGHT: 
+			_command_change_light(command.kwargs)
+		OpCode.DELETE_LIGHT: 
+			_command_delete_light(command.kwargs)
 		OpCode.SET_LIGHT_POSITION: 
 			_command_set_light_position(command.kwargs)
 
 
-func _command_message(kwargs):
+func _command_message(kwargs : Dictionary):
 	print(kwargs.get("message"))
 
 
-func _command_new_map(kwargs):
+func _command_new_map(kwargs : Dictionary):
 	if map:
 		map.queue_free()
 		
@@ -269,21 +310,21 @@ func _command_new_map(kwargs):
 
 
 func _command_save_map(kwargs := {}):
-	var serialized_map = map.serialize()
-	var json_string = JSON.stringify(serialized_map, "", false)
-	var save_map = FileAccess.open("user://maps/%s.json" % map.name, FileAccess.WRITE)
-	var open_error = FileAccess.get_open_error()
+	var serialized_map := map.serialize()
+	var json_string := JSON.stringify(serialized_map, "", false)
+	var save_map := FileAccess.open("user://maps/%s.json" % map.name, FileAccess.WRITE)
+	var open_error := FileAccess.get_open_error()
 	if open_error:
 		if open_error == ERR_FILE_NOT_FOUND:
 			DirAccess.make_dir_recursive_absolute("user://maps")
 			save_map = FileAccess.open("user://maps/%s.json" % map.name, FileAccess.WRITE)
 		else:
-			print("error saving map: " + open_error)
+			print("error saving map: " + str(open_error))
 	save_map.store_line(json_string)
 	print("map saved")
 
 
-func _command_new_entity(kwargs):
+func _command_new_entity(kwargs : Dictionary):
 	var entity := entity_scene.instantiate() as Entity
 	entity.name = kwargs["id"]
 	map.entities_parent.add_child(entity)
@@ -293,12 +334,12 @@ func _command_new_entity(kwargs):
 	populate_tokens_tree()
 
 
-func _command_change_entity(kwargs):
+func _command_change_entity(kwargs : Dictionary):
 	var entity : Entity = map.entities_parent.get_node(kwargs["id"])
 	entity.change(kwargs)
 	
 	if entity == map.entity_eyes:
-		map.update_view()
+		map.update_fov()
 	
 	populate_tokens_tree()
 
@@ -317,7 +358,7 @@ func _command_set_entity_position(kwargs):
 	entity.position = Utils.array_to_v3(kwargs["position"])
 	
 	if entity == map.entity_eyes:
-		map.update_view()
+		map.update_fov()
 
 
 func _command_set_entity_target_position(kwargs):
@@ -325,7 +366,7 @@ func _command_set_entity_target_position(kwargs):
 	entity.target_position = Utils.array_to_v3(kwargs["target_position"])
 	
 	
-func _command_set_cells_position(kwargs):
+func _command_set_cells(kwargs):
 	var serialized_cells = kwargs["cells"]
 	for serialized_cell in serialized_cells:
 		var cell_position = Vector3i(
@@ -336,25 +377,41 @@ func _command_set_cells_position(kwargs):
 		map.set_cell(cell_position, cell)
 		map.cells_queded[cell_position] = cell
 		
-	map.update_view()
+	map.refresh_lights()
+	map.update_fov()
 	
 	
 func _command_new_light(kwargs):
 	var light := light_scene.instantiate() as Light
-	light.name = kwargs["id"]
-	light.bright = kwargs.get("bright", 0)
-	light.faint = kwargs.get("faint", 0)
+	light.id = kwargs["id"]
 	map.lights_parent.add_child(light)
 	_command_set_light_position(kwargs)
+	_command_change_light(kwargs)
 	
-	map.update_view()
+	map.update_fov()
+
+
+func _command_change_light(kwargs):
+	var light : Light = map.lights_parent.get_node(kwargs["id"])
+	light.change(kwargs)
+	
+	map.update_fov()
+
+
+func _command_delete_light(kwargs):
+	var light : Light = map.lights_parent.get_node(kwargs["id"])
+	if light:
+		light.get_parent().remove_child(light)
+		light.queue_free()
+	
+	map.update_fov()
 	
 	
 func _command_set_light_position(kwargs):
 	var light : Light = map.lights_parent.get_node(kwargs["id"])
 	light.position = Utils.v3_to_v3i(Utils.array_to_v3(kwargs["position"]))
 	
-	map.update_view()
+	map.update_fov()
 
 
 ###########
@@ -384,12 +441,12 @@ func test_fried_commands():
 	new_command(OpCode.NEW_MAP, {
 		"fried_file": "user://maps/0.json",
 	})
-	new_command(OpCode.NEW_LIGHT, {
-		"id": "0",
-		"position": Utils.v3_to_array(Vector3(14, 0, 24.5)),
-		"bright": 5,
-		"faint": 10,
-	})
+#	new_command(OpCode.NEW_LIGHT, {
+#		"id": "0",
+#		"position": Utils.v3_to_array(Vector3(14, 0, 24.5)),
+#		"bright": 5,
+#		"faint": 10,
+#	})
 
 
 func test_commands():

@@ -3,8 +3,12 @@ extends CharacterBody3D
 
 signal cell_changed
 signal changed
-signal selected(is_selected)
 
+var id : String : 
+	get:
+		return str(name)
+	set(value):
+		name = value
 
 var label := 'Unlabeled' : set = _set_label
 var label_known := false : set = _set_label_known
@@ -37,8 +41,8 @@ var is_selected : bool :
 	get:
 		return selector.visible
 	set(value):
-		selector.visible = value
-		selected.emit(value)
+		if selector.visible != value:
+			selector.visible = value
 
 
 @onready var base := $Base as MeshInstance3D
@@ -55,10 +59,13 @@ func _ready():
 	update_timer.wait_time = tick
 	update_timer.autostart = true
 	update_timer.timeout.connect(_update)
+
 	body.position += Vector3(
 		randf_range(-1, 1),
 		randf_range(-1, 1),
 		randf_range(-1, 1)).normalized() * 0.01
+
+	selector.visible = false
 
 	_set_label(label)
 	_set_label_known(label_known)
@@ -78,7 +85,7 @@ func _physics_process(delta):
 		if position == target_position:
 			moving_to_target = false
 			if self == Game.world.map.entity_eyes:
-				Game.world.map.update_view()
+				Game.world.map.update_fov()
 				
 	elif Game.world.map and Game.world.map.entity_eyes == self:
 		_move_process(delta)
@@ -105,7 +112,7 @@ func _move_process(delta):
 
 func validate_position(fallback_position := Vector3(0, 0, 0)):
 	var cell_position = Vector3i(position)
-	var cell : Map.Cell = Game.world.map.get_cell(cell_position)
+	var cell : Map.Cell = Game.world.map.cells.get(cell_position)
 	
 	if not cell:
 		position = fallback_position
@@ -117,6 +124,7 @@ func validate_position(fallback_position := Vector3(0, 0, 0)):
 		cell.is_transparent = true
 		cell.is_open = true
 		Game.world.map.set_cell(cell_position, cell)
+		Game.world.map.refresh_lights()
 		Server.send_message(Game.world.OpCode.SET_CELLS, {
 			"cells": [Game.world.map.serialize_cell(cell_position, cell)]
 		})
@@ -140,15 +148,16 @@ func _update():
 	is_selected = Game.world.selected_entity == self
 
 	# calculate if entity is visible
-	var cell = get_cell()
-	if cell and cell.light_fixture != Color.BLACK:
+	var cell := get_cell()
+	if cell and cell.get_light_intensity(cell_position):
 		if cell.is_in_view != is_in_view:
 			is_in_view = cell.is_in_view
 			visible = is_in_view
 			label_control.visible = is_in_view
-			
-		if cell.light_fixture != light_fixture:
-			light_fixture = cell.light_fixture
+		
+		var cell_light_fixture := cell.get_light_fixture(cell_position)
+		if cell_light_fixture != light_fixture:
+			light_fixture = cell_light_fixture
 			base.mesh.surface_get_material(0).albedo_color = base_color * light_fixture
 			body.get_surface_override_material(0).albedo_color = body_tint * light_fixture
 	

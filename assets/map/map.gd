@@ -4,6 +4,12 @@ extends Node3D
 signal changed
 
 
+var id : String : 
+	get:
+		return str(name)
+	set(value):
+		name = value
+
 var label := 'Unlabeled'
 var min_x : int = 0
 var min_y : int = 0
@@ -14,14 +20,21 @@ var max_z : int = 0
 var ambient_light : int = 0
 var floors := {}
 var cells := {}
-var cells_queded := {}
+var cells_explored := {}
 var cache_cells := {}
 var entity_eyes : Entity
+
 var entity_hovered : Entity
-var preview_move_mode : bool
+var preview_entity_move_mode : bool
 var entity_moving : Entity
-var offset_moving : Vector3
+var offset_entity_moving : Vector3
 var preview_entity : Entity
+
+var light_hovered : Light
+var preview_light_move_mode : bool
+var light_moving : Light
+var offset_light_moving : Vector3
+var preview_light : Light
 
 var is_cell_hovered : bool
 var position_hovered : Vector3
@@ -44,14 +57,14 @@ var cell_pointed : Cell :
 		return cells.get(cell_pointed_position)
 
 
-@onready var library = $MapLibrary as MapLibrary
-@onready var solid_map = $SolidMap as GridMap
-@onready var entities_parent = $Entities as Node3D
-@onready var lights_parent = $Lights as Node3D
+@onready var library := $MapLibrary as MapLibrary
+@onready var solid_map := $SolidMap as GridMap
+@onready var entities_parent := $Entities as Node3D
+@onready var lights_parent := $Lights as Node3D
 @onready var map_theme := MapTheme.new()
-@onready var cell_raycast = PhysicsRayQueryParameters3D.new()
-@onready var entity_raycast = PhysicsRayQueryParameters3D.new()
-@onready var light_raycast = PhysicsRayQueryParameters3D.new()
+@onready var cell_raycast := PhysicsRayQueryParameters3D.new()
+@onready var entity_raycast := PhysicsRayQueryParameters3D.new()
+@onready var light_raycast := PhysicsRayQueryParameters3D.new()
 
 
 func _ready():
@@ -61,34 +74,47 @@ func _ready():
 	
 func _physics_process(delta):
 	_process_cell_ray_hit()
+	_process_light_ray_hit()
 	_process_entity_ray_hit()
-	_process_preview_move(delta)
-	
-	
-func get_cell(cell_position : Vector3i) -> Cell:
-	var cell = cells.get(cell_position)
-	if not cell:
-		return cells_queded.get(cell_position) 
-	if cell.is_in_view:
-		return cells_queded.get(cell_position, cell)
-	return cell
+	_process_preview_entity_move(delta)
+	_process_preview_light_move(delta)
 		
+
+func get_cell_code(cell_position : Vector3i, cell : Cell, cell_light_intensity : int) -> int:
+		
+	# buil mode
+	if cell.is_preview:
+		return solid_map.mesh_library.find_item_by_name(cell.skin)
 	
+	if cell.is_in_view and cell_light_intensity:
+		var light_str = str(snappedi(cell_light_intensity - 10, 20))
+		return solid_map.mesh_library.find_item_by_name(light_str + cell.skin)
+
+	var cell_explored = cells_explored.get(cell_position)
+	if cell_explored and Game.is_high_end:
+		return solid_map.mesh_library.find_item_by_name('x' + cell_explored.skin)
+	
+	return -1
+
+
 func set_cell(cell_position : Vector3i, cell : Cell):
+	cells[cell_position] = cell
+	
+	var cell_light_intensity = 0
 	if cell.is_in_view:
-		cells[cell_position] = cell
-	else:
-		cells_queded[cell_position] = cell
-		cell = get_cell(cell_position)
-	
-	if not cell:
-		solid_map.set_cell_item(cell_position, -1, cell.orientation)
-		return
-	
-	solid_map.set_cell_item(cell_position, cell.code(cell_position), cell.orientation)
+		cell_light_intensity = cell.get_light_intensity(cell_position)
 		
-	if cell_position.y == 0:
-		floors[cell_position.y].set_transparent(Vector2i(cell_position.x, cell_position.z), cell.is_transparent)
+		if cell_light_intensity:
+			cells_explored[cell_position] = cell
+
+	if cell:
+		solid_map.set_cell_item(cell_position, get_cell_code(cell_position, cell, cell_light_intensity), cell.orientation)
+		if cell_position.y == 0:
+			floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), cell.is_transparent)
+	else:
+		solid_map.set_cell_item(cell_position, -1)
+		if cell_position.y == 0:
+			floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), true)
 
 
 func load_map(kwargs):
@@ -103,47 +129,54 @@ func load_map(kwargs):
 		deserialize(kwargs["map"])
 		
 	if Game.is_host:
-		reset_view(true)
+		reset_cells(true)
 
 
 func change_to_entity_eyes(entity):
 	if entity_eyes:
-		entity_eyes.cell_changed.disconnect(update_view)
+		entity_eyes.cell_changed.disconnect(update_fov)
 	
 	entity_eyes = entity
 	
 	if entity:
-		reset_view(false)
-		entity.cell_changed.connect(update_view)
-		update_view()
+		reset_cells(false)
+		entity.cell_changed.connect(update_fov)
+		update_fov()
 	else:
-		reset_view(true)
+		reset_cells(true)
 
 
-func reset_view(is_in_view):
+func reset_cells(is_in_view):
 	for y in range(min_y, max_y):
 		for x in range(min_x, max_x):
 			for z in range(min_z, max_z):
 				var cell_position = Vector3i(x, y, z)
-				var cell = get_cell(cell_position)
+				var cell = cells.get(cell_position)
 				if cell:
 					cell.is_in_view = is_in_view
 					set_cell(cell_position, cell)
 
 
+func refresh_lights():
+	for light in lights_parent.get_children():
+		light.update_fov()
+
+
 func reset_explored():
+	cells_explored.clear()
+	
 	for y in range(min_y, max_y):
 		for x in range(min_x, max_x):
 			for z in range(min_z, max_z):
 				var cell_position = Vector3i(x, y, z)
-				var cell = get_cell(cell_position)
+				var cell = cells.get(cell_position)
 				if cell:
-					cell.is_explored = false
 					set_cell(cell_position, cell)
 
 
-func update_view():
+func update_fov():
 	if not entity_eyes:
+		reset_cells(true)
 		return
 	
 	var c_x := entity_eyes.cell_position.x
@@ -162,14 +195,14 @@ func update_view():
 		
 	cache_cells.clear()
 	
-	floors[c_y].clear_field_of_view()
-	floors[c_y].compute_field_of_view(Utils.v3_to_v2i(entity_eyes.position), RANGE)
+	floors[0].clear_field_of_view()
+	floors[0].compute_field_of_view(Utils.v3_to_v2i(entity_eyes.position), RANGE)
 	
 	for y in [c_y - 1, c_y]:
 		for x in range(c_x - RANGE, c_x + RANGE + 1):
 			for z in range(c_z - RANGE, c_z + RANGE + 1):
 				var cell_position = Vector3i(x, y, z)
-				var cell = get_cell(cell_position)
+				var cell = cells.get(cell_position)
 				if not cell:
 					continue
 				
@@ -210,47 +243,82 @@ func _process_entity_ray_hit():
 func _process_light_ray_hit():
 	var hit_info = _get_hit_info(light_raycast, Utils.get_bitmask(3))
 	if hit_info:
-		entity_hovered = hit_info["collider"]
+#		print(hit_info["collider"].get_path())
+		light_hovered = hit_info["collider"].get_parent().get_parent()
 	else:
-		entity_hovered = null
+		light_hovered = null
 		
 
-func _process_preview_move(delta):
-	if entity_hovered and Input.is_action_just_pressed("left_click"):
-		preview_move_mode = true
+func _process_preview_entity_move(delta):
+	if entity_hovered and not light_hovered and Input.is_action_just_pressed("left_click"):
+		preview_entity_move_mode = true
 		entity_moving = entity_hovered
-		offset_moving = entity_moving.position - position_hovered
+		offset_entity_moving = entity_moving.position - position_hovered
 		preview_entity = Game.world.entity_scene.instantiate() as Entity
 		Game.world.map.add_child(preview_entity)
 		preview_entity.preview = true
 		preview_entity.texture_path = entity_moving.texture_path
 		var preview_base_color = entity_moving.base_color
-		preview_base_color.a *= 0.75
+		preview_base_color.a *= 0.5
 		preview_entity.base_color = preview_base_color
 		preview_entity.position = entity_moving.position
 		var preview_body_material = preview_entity.body.get_surface_override_material(0)
 		preview_body_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
 		preview_body_material.albedo_color.a *= 0.75
 		preview_entity.label_control.visible = false
+		preview_entity.selector.visible = true
 		
 	var preview_entity_position = position_hovered
-	preview_entity_position += normal_hovered * 0.1 * Vector3(1, 0, 1) + offset_moving
+	preview_entity_position += normal_hovered * 0.1 * Vector3(1, 0, 1) + offset_entity_moving
 	
-	if preview_move_mode:
+	if preview_entity_move_mode:
 		preview_entity.position = lerp(preview_entity.position, preview_entity_position, 20 * delta)
 	
-	if preview_move_mode and Input.is_action_just_released("left_click"):
-		preview_move_mode = false
+	if preview_entity_move_mode and Input.is_action_just_released("left_click"):
+		preview_entity_move_mode = false
 		preview_entity.queue_free()
 		preview_entity = null
 		var fallback_position = entity_moving.position
 		entity_moving.position = position_hovered
-		entity_moving.position += normal_hovered * 0.1 + offset_moving
+		entity_moving.position += normal_hovered * 0.1 + offset_entity_moving
 		entity_moving.position.y = 0
 		entity_moving.validate_position(fallback_position)
 		Server.send_message(Game.world.OpCode.SET_ENTITY_TARGET_POSITION, {
-			"id": entity_moving.name,
+			"id": entity_moving.id,
 			"target_position": Utils.v3_to_array(entity_moving.position), 
+		})
+
+		
+func _process_preview_light_move(delta):
+	if light_hovered and Input.is_action_just_pressed("left_click"):
+		preview_light_move_mode = true
+		light_moving = light_hovered
+		offset_light_moving = light_moving.position - position_hovered
+		preview_light = Game.world.light_scene.instantiate() as Light
+		Game.world.map.add_child(preview_light)
+		preview_light.preview = true
+		var preview_color = light_moving.color
+		preview_color.a *= 0.5
+		preview_light.color = preview_color
+		preview_light.position = light_moving.position
+		preview_light.selector.visible = true
+		
+	var preview_light_position := position_hovered
+	preview_light_position += normal_hovered * 0.1 * Vector3(1, 0, 1) + offset_light_moving
+	
+	if preview_light_move_mode:
+		preview_light.position = lerp(preview_light.position, preview_light_position, 20 * delta)
+	
+	if preview_light_move_mode and Input.is_action_just_released("left_click"):
+		preview_light_move_mode = false
+		preview_light.queue_free()
+		preview_light = null
+		light_moving.position = position_hovered
+		light_moving.position += normal_hovered * 0.1 + offset_light_moving
+		light_moving.position.y = 0
+		Server.send_message(Game.world.OpCode.SET_LIGHT_POSITION, {
+			"id": light_moving.id,
+			"position": Utils.v3_to_array(light_moving.position), 
 		})
 
 
@@ -282,47 +350,27 @@ class Cell:
 	var is_open : bool
 	var is_locked : bool
 	
-	var is_queued : bool
+	var is_preview : bool
 	var is_in_view : bool
-	var is_explored : bool
 	var lights : Array[Light] = []
-	
-	var light_intensity : int = 0 : get = _get_light_intensity
-	var light_fixture : Color = Color.WHITE : get = _get_light_fixture
 	
 	
 	func _init(p_map):
 		map = p_map
 
 
-	func code(cell_position : Vector3i) -> int:
-
-		if map.lights_parent.get_children():
-			lights = [map.lights_parent.get_node("0")]
-		
-		light_intensity = 0
-		if is_in_view:
-			for light in lights:
-				light_intensity += light.get_intensity(cell_position)
-				
-			if light_intensity:
-				is_explored = true
-				var light_str = str(snappedi(light_intensity - 10, 20))
-				return map.solid_map.mesh_library.find_item_by_name(light_str + skin)
-
-		if is_explored and Game.is_high_end:
-			return map.solid_map.mesh_library.find_item_by_name('x' + skin)
+	func get_light_intensity(cell_position : Vector3i) -> int:
+		var light_intensity = 0
+		for light in lights:
+			light_intensity += light.get_intensity(cell_position)
 			
-		return -1
-	
-	func _get_light_intensity() -> int:
 		var is_master_ambient_light_enabled := Game.is_host and not map.entity_eyes
 		var master_ambient_light := 20 if is_master_ambient_light_enabled else 0
 		return clamp(max(map.ambient_light, emission, light_intensity), master_ambient_light, 100)
 	
 	
-	func _get_light_fixture():
-		var value = Color.WHITE * light_intensity / 100
+	func get_light_fixture(cell_position : Vector3i) -> Color:
+		var value = Color.WHITE * get_light_intensity(cell_position) / 100
 		value.a = 1
 		return value
 	
@@ -424,13 +472,24 @@ func serialize() -> Dictionary:
 	for cell_position in cells:
 		var cell : Cell = cells[cell_position]
 		serialized_cells.append(serialize_cell(cell_position, cell))
+	
+	var serialized_lights = []
+	for light in lights_parent.get_children():
+		var serialized_light := {}
+		serialized_light["id"] = light.id
+		serialized_light["position"] = Utils.v3_to_array(light.position)
+		serialized_light["intensity"] = light.intensity
+		serialized_light["bright"] = light.bright
+		serialized_light["faint"] = light.faint
+		serialized_light["follow"] = light.follow
+		serialized_lights.append(serialized_light)
 		
 	var serialized_entities = []
 	for entity in entities_parent.get_children():
 		var serialized_entity = {}
-		serialized_entity["id"] = str(entity.name)
-		serialized_entity["position"] = Utils.v3_to_array(
-			entity.target_position if entity.moving_to_target else entity.position)
+		serialized_entity["id"] = entity.id
+		var entity_position = entity.target_position if entity.moving_to_target else entity.position
+		serialized_entity["position"] = Utils.v3_to_array(entity_position)
 		serialized_entity["label"] = entity.label
 		serialized_entity["health"] = entity.health
 		serialized_entity["health_max"] = entity.health_max
@@ -446,13 +505,14 @@ func serialize() -> Dictionary:
 		"to": [max_x, max_y, max_z],
 		"cells": serialized_cells,
 		"entities": serialized_entities,
+		"lights": serialized_lights,
 	}
 	
 	return serialized_map
 
 
 func deserialize(serialized_map : Dictionary):
-	name = serialized_map['id']
+	id = serialized_map['id']
 	label = serialized_map['label']
 	min_x = serialized_map['from'][0]
 	min_y = serialized_map['from'][1]
@@ -464,7 +524,7 @@ func deserialize(serialized_map : Dictionary):
 	for y in range(min_y + 1, max_y):
 		floors[y] = MRPAS.new(Vector2(max_x - min_x, max_z - min_z ))
 	
-	for serialized_cell in serialized_map['cells']:
+	for serialized_cell in serialized_map.get('cells', {}):
 		var cell_position = Vector3i(
 			serialized_cell["x"], 
 			serialized_cell["y"], 
@@ -472,5 +532,8 @@ func deserialize(serialized_map : Dictionary):
 		var cell = deserialize_cell(serialized_cell)
 		set_cell(cell_position, cell)
 	
-	for serialized_entity in serialized_map['entities']:
+	for serialized_light in serialized_map.get('lights', {}):
+		Game.world.new_command(Game.world.OpCode.NEW_LIGHT, serialized_light)
+	
+	for serialized_entity in serialized_map.get('entities', {}):
 		Game.world.new_command(Game.world.OpCode.NEW_ENTITY, serialized_entity)

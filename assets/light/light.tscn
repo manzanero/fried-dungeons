@@ -3,9 +3,12 @@
 [ext_resource type="Script" path="res://assets/light/light.gd" id="1_ekc65"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vuujh"]
+resource_local_to_scene = true
+transparency = 4
 shading_mode = 0
 
 [sub_resource type="SphereMesh" id="SphereMesh_ulatc"]
+resource_local_to_scene = true
 material = SubResource("StandardMaterial3D_vuujh")
 radius = 0.1
 height = 0.2
@@ -59,7 +62,7 @@ unique_name_in_owner = true
 mesh = SubResource("SphereMesh_ulatc")
 skeleton = NodePath("../..")
 
-[node name="MeshInstance3D2" type="MeshInstance3D" parent="Pivot/Body"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Pivot/Body"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
 mesh = SubResource("CylinderMesh_2x0np")
 skeleton = NodePath("../../..")
@@ -79,10 +82,13 @@ skeleton = NodePath("../Body")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Pivot/Selector"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6, 0)
-visible = false
 mesh = SubResource("CylinderMesh_38mrw")
 skeleton = NodePath("../../..")
 
 [node name="Follower" type="RemoteTransform3D" parent="."]
 update_rotation = false
 update_scale = false
+
+[node name="UpdateTimer" type="Timer" parent="."]
+wait_time = 0.1
+autostart = true
