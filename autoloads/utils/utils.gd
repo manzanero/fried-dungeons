@@ -37,11 +37,35 @@ func get_bitmask(x : int) -> int:
 	return int(pow(2, x - 1))
 
 
-func read_json(json_file_path : String) -> Dictionary:
+func loads_json(data):
+	return JSON.parse_string(data)
+
+
+func read_json(json_file_path : String):
 	var file = FileAccess.open(json_file_path, FileAccess.READ)
+	var open_error := FileAccess.get_open_error()
+	if open_error:
+		printerr("error reading json: %s" % error_string(open_error))
 	var text = file.get_as_text()
-	var dict = JSON.parse_string(text)
+	var dict = loads_json(text)
 	return dict
+
+
+func dumps_json(data) -> String:
+	return JSON.stringify(data, "", false)
+
+
+func write_json(json_file_path : String, data):
+	var json_string := dumps_json(data)
+	var file := FileAccess.open(json_file_path, FileAccess.WRITE)
+	var open_error := FileAccess.get_open_error()
+	if open_error:
+		printerr("error writing json: %s" % error_string(open_error))
+	file.store_line(json_string)
+
+
+func make_dirs(path : String):
+	DirAccess.make_dir_recursive_absolute(path)
 
 
 func generate_match_name():

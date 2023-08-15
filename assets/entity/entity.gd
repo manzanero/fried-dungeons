@@ -125,7 +125,7 @@ func validate_position(fallback_position := Vector3(0, 0, 0)):
 		cell.is_open = true
 		Game.world.map.set_cell(cell_position, cell)
 		Game.world.map.refresh_lights()
-		Server.send_message(Game.world.OpCode.SET_CELLS, {
+		Game.world.send_command(Game.world.OpCode.SET_CELLS, {
 			"cells": [Game.world.map.serialize_cell(cell_position, cell)]
 		})
 		
@@ -171,7 +171,7 @@ func _update():
 	
 	# calculate if entity has been moved
 	if position_changed:
-		Server.send_message(Game.world.OpCode.SET_ENTITY_TARGET_POSITION, {
+		Game.world.send_command(Game.world.OpCode.SET_ENTITY_TARGET_POSITION, {
 			"id": name,
 			"target_position": Utils.v3_to_array(position), 
 		})
@@ -186,10 +186,10 @@ func _update():
 func change(kwargs):
 	
 	# TODO: remove this
-	if kwargs["id"] in Game.public_entities:
-		label_known = true
-		health_known = true
-		Game.world.map.change_to_entity_eyes(self)
+#	if kwargs["id"] in Game.public_entities:
+#		label_known = true
+#		health_known = true
+#		Game.world.map.change_to_entity_eyes(self)
 		
 	if "label" in kwargs: 
 		label = kwargs["label"]

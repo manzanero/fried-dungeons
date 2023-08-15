@@ -68,7 +68,7 @@ func _on_submit_button_button_pressed():
 	Game.world.map.refresh_lights()
 	Game.world.map.update_fov()
 		
-	Server.send_message(Game.world.OpCode.SET_CELLS, {
+	Game.world.send_command(Game.world.OpCode.SET_CELLS, {
 		"cells": serialized_cells
 	})
 

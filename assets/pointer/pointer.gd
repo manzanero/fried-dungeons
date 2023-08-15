@@ -29,7 +29,7 @@ func move_to(p_cell_position : Vector3i):
 	
 
 func get_cell():
-	return Game.world.map.get_cell(cell_position) if pointing else null
+	return Game.world.map.cells.get(cell_position) if pointing else null
 
 
 ###########

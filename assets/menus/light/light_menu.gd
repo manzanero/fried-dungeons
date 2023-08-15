@@ -33,7 +33,7 @@ func _ready():
 		intensity_edit.value = light.intensity
 		bright_edit.value = light.bright
 		faint_edit.value = light.faint
-		following_edit.text = light.parent
+		following_edit.text = light.follow
 	else:
 		id_edit.text = UUID.short()
 
@@ -47,7 +47,7 @@ func _on_delete_button_pressed():
 	queue_free()
 	light.get_parent().remove_child(light)
 	light.queue_free()
-	Server.send_message(Game.world.OpCode.DELETE_LIGHT, {
+	Game.world.send_command(Game.world.OpCode.DELETE_LIGHT, {
 		"id": str(light.name)
 	})
 	
@@ -70,25 +70,25 @@ func _on_apply_button_pressed():
 	light.intensity = intensity_edit.value
 	light.bright = bright_edit.value
 	light.faint = faint_edit.value
-	light.parent = following_edit.text
+	light.follow = following_edit.text
 	light.name = id_edit.text
 	
 	if is_new_light:
-		Server.send_message(Game.world.OpCode.NEW_LIGHT, {
+		Game.world.send_command(Game.world.OpCode.NEW_LIGHT, {
 			"position": Utils.v3_to_array(light.position),
 			"id": str(light.name),
 			"intensity": light.intensity,
 			"bright": light.bright,
 			"faint": light.faint,
-			"parent": light.parent,
+			"follow": light.follow,
 		})
 	else:
-		Server.send_message(Game.world.OpCode.CHANGE_LIGHT, {
+		Game.world.send_command(Game.world.OpCode.CHANGE_LIGHT, {
 			"id": str(light.name),
 			"intensity": light.intensity,
 			"bright": light.bright,
 			"faint": light.faint,
-			"parent": light.parent,
+			"follow": light.follow,
 		})
 
 	light.update_fov()

@@ -43,25 +43,23 @@ var selected_entity : Entity
 
 
 func _ready():
-	seed(2)
-	Game.world = self
 	Game.camera = $CameraPivot
 	
 	for child in maps_parent.get_children():
 		child.queue_free()
 		
 	commands_panel.visible = Game.is_host
-	player_name_tab.set_tab_title(0, Game.player_name)
+	
+#	if Game.is_host:
+#		save_timer.timeout.connect(enqueue_command.bind(OpCode.SAVE_MAP))
+	
+	Server.message.connect(enqueue_command)
+	
+	pointer.pointing = false
+	
 	update_timer.wait_time = tick
 	update_timer.autostart = true
 	update_timer.timeout.connect(_update)
-	
-#	if Game.is_host:
-#		save_timer.timeout.connect(new_command.bind(OpCode.SAVE_MAP))
-	
-	Server.message.connect(new_command)
-	
-	pointer.pointing = false
 	
 	new_entity_button.pressed.connect(_on_new_entity_button_pressed)
 	new_light_button.pressed.connect(_on_new_light_button_pressed)
@@ -83,8 +81,25 @@ func _ready():
 	tokens_tree.item_selected.connect(_select_tokens_tree)
 	tokens_tree.item_activated.connect(_activate_tokens_tree)
 
+	if Game.is_host:
+		var current_map = Game.player.map
+		var map_id = current_map if current_map and current_map != 'None' else Game.campaign.maps[0]
+		
+		enqueue_command(OpCode.SET_MAP, {
+			"id": "MAP000",
+			"file": "user://maps/MAP000.json",
+		})
+#
+#		enqueue_command(OpCode.SET_MAP, {
+#			"id": map_id,
+#		})
+	else:
+		send_command(OpCode.SEND_CAMPAIGN, {
+			"player": Game.player_id
+		})
+
 #	test_commands()
-	test_fried_commands()
+#	test_fried_commands()
 	
 
 func populate_tokens_tree():
@@ -95,12 +110,16 @@ func populate_tokens_tree():
 	var entities = map.entities_parent.get_children()
 	entities.sort_custom(func(a, b): return a.label.naturalnocasecmp_to(b.label) < 0)
 	
-	if not Game.is_host:
+	var to_draw_entities := []
+	if Game.is_host:
+		to_draw_entities = entities
+	else:
 		for entity in entities:
-			if str(entity.name) not in Game.public_entities:
-				entities.erase(entity)
+			if not Game.player.has_entity_permissions(entity.id, [Game.EntityPermission.GET_LABEL]):
+				continue
+			to_draw_entities.append(entity)
 	
-	for entity in entities:
+	for entity in to_draw_entities:
 		var entity_child = tokens_tree.create_item(root)
 		entity_child.set_text(0, entity.label)
 		entity_child.set_tooltip_text(0, " ")
@@ -124,7 +143,7 @@ func _process(delta):
 	pass
 #	if Input.is_action_just_pressed("right_click"):
 #		var message = "hello from " + ("host" if Game.is_host else "not host")
-#		Server.send_message(OpCode.MESSAGE, {
+#		Game.world.send_command(OpCode.MESSAGE, {
 #			"message": message,
 #		})
 
@@ -203,7 +222,7 @@ func _unhandled_input(event):
 				entity_contextual_menu.visible = false
 					
 				# cell selection
-				if map.is_cell_hovered and not map.entity_hovered and not map.light_hovered:
+				if map and map.is_cell_hovered and not map.entity_hovered and not map.light_hovered:
 					pointer.pointing = true
 					pointer.move_to(map.cell_pointed_position)
 					selected_light = null
@@ -217,7 +236,7 @@ func _unhandled_input(event):
 					pointer.pointing = false
 						
 				# light selection
-				if map.light_hovered and not map.entity_hovered:
+				if map and map.light_hovered and not map.entity_hovered:
 					pointer.pointing = false
 					selected_light = map.light_hovered
 					selected_entity = null
@@ -230,7 +249,7 @@ func _unhandled_input(event):
 					selected_light = null
 						
 				# entity selection
-				if map.entity_hovered and not map.light_hovered:
+				if map and map.entity_hovered and not map.light_hovered:
 					pointer.pointing = false
 					selected_light = null
 					selected_entity = map.entity_hovered
@@ -250,7 +269,10 @@ func _unhandled_input(event):
 
 enum OpCode {
 	MESSAGE,
-	NEW_MAP,
+	SET_CAMPAIGN,
+	SEND_CAMPAIGN,
+	SET_MAP,
+	SEND_MAP,
 	SAVE_MAP,
 	NEW_ENTITY,
 	CHANGE_ENTITY,
@@ -266,40 +288,51 @@ enum OpCode {
 
 
 func execute_command(command : Command):
+	print("Player %s - Command: %s" % [Game.player_id, OpCode.keys()[command.op_code]])
 	match command.op_code:
-		OpCode.MESSAGE: 
-			_command_message(command.kwargs)
-		OpCode.NEW_MAP: 
-			_command_new_map(command.kwargs)
-		OpCode.SAVE_MAP: 
-			_command_save_map(command.kwargs)
-		OpCode.NEW_ENTITY: 
-			_command_new_entity(command.kwargs)
-		OpCode.CHANGE_ENTITY: 
-			_command_change_entity(command.kwargs)
-		OpCode.DELETE_ENTITY: 
-			_command_delete_entity(command.kwargs)
-		OpCode.SET_ENTITY_POSITION: 
-			_command_set_entity_position(command.kwargs)
-		OpCode.SET_ENTITY_TARGET_POSITION: 
-			_command_set_entity_target_position(command.kwargs)
-		OpCode.SET_CELLS: 
-			_command_set_cells(command.kwargs)
-		OpCode.NEW_LIGHT: 
-			_command_new_light(command.kwargs)
-		OpCode.CHANGE_LIGHT: 
-			_command_change_light(command.kwargs)
-		OpCode.DELETE_LIGHT: 
-			_command_delete_light(command.kwargs)
-		OpCode.SET_LIGHT_POSITION: 
-			_command_set_light_position(command.kwargs)
+		OpCode.MESSAGE: _command_message(command.kwargs)
+		OpCode.SET_CAMPAIGN: _command_set_campaign(command.kwargs)
+		OpCode.SEND_CAMPAIGN: _command_send_campaign(command.kwargs)
+		OpCode.SET_MAP: _command_set_map(command.kwargs)
+		OpCode.SEND_MAP: _command_send_map(command.kwargs)
+		OpCode.SAVE_MAP: _command_save_map(command.kwargs)
+		OpCode.NEW_ENTITY: _command_new_entity(command.kwargs)
+		OpCode.CHANGE_ENTITY: _command_change_entity(command.kwargs)
+		OpCode.DELETE_ENTITY: _command_delete_entity(command.kwargs)
+		OpCode.SET_ENTITY_POSITION: _command_set_entity_position(command.kwargs)
+		OpCode.SET_ENTITY_TARGET_POSITION: _command_set_entity_target_position(command.kwargs)
+		OpCode.SET_CELLS: _command_set_cells(command.kwargs)
+		OpCode.NEW_LIGHT: _command_new_light(command.kwargs)
+		OpCode.CHANGE_LIGHT: _command_change_light(command.kwargs)
+		OpCode.DELETE_LIGHT: _command_delete_light(command.kwargs)
+		OpCode.SET_LIGHT_POSITION: _command_set_light_position(command.kwargs)
 
 
 func _command_message(kwargs : Dictionary):
 	print(kwargs.get("message"))
 
 
-func _command_new_map(kwargs : Dictionary):
+func _command_set_campaign(kwargs : Dictionary):
+	Game.campaign.deserialize(kwargs["campaign"])
+	var current_map = Game.player.map
+	var file = current_map if current_map and current_map != 'None' else Game.campaign.maps[0]
+	send_command(OpCode.SEND_MAP, {
+		"player": Game.player_id
+	})
+	
+	player_name_tab.set_tab_title(0, Game.player.username)
+
+
+func _command_send_campaign(kwargs : Dictionary):
+	send_command(OpCode.SET_CAMPAIGN, {
+		"campaign": Game.campaign.serialize(),
+	},
+	[
+		kwargs["player"]
+	])
+
+
+func _command_set_map(kwargs : Dictionary):
 	if map:
 		map.queue_free()
 		
@@ -309,19 +342,19 @@ func _command_new_map(kwargs : Dictionary):
 	map.load_map(kwargs)
 
 
+func _command_send_map(kwargs : Dictionary):
+	Server.save_object("map-" + map.id, map.serialize())
+
+	send_command(OpCode.SET_MAP, {
+		"id": map.id,
+	},
+	[
+		kwargs["player"]
+	])
+
+
 func _command_save_map(kwargs := {}):
-	var serialized_map := map.serialize()
-	var json_string := JSON.stringify(serialized_map, "", false)
-	var save_map := FileAccess.open("user://maps/%s.json" % map.name, FileAccess.WRITE)
-	var open_error := FileAccess.get_open_error()
-	if open_error:
-		if open_error == ERR_FILE_NOT_FOUND:
-			DirAccess.make_dir_recursive_absolute("user://maps")
-			save_map = FileAccess.open("user://maps/%s.json" % map.name, FileAccess.WRITE)
-		else:
-			print("error saving map: " + str(open_error))
-	save_map.store_line(json_string)
-	print("map saved")
+	Utils.write_json("user://maps/%s.json" % map.name, map.serialize())
 
 
 func _command_new_entity(kwargs : Dictionary):
@@ -375,7 +408,6 @@ func _command_set_cells(kwargs):
 			serialized_cell["z"])
 		var cell = map.deserialize_cell(serialized_cell)
 		map.set_cell(cell_position, cell)
-		map.cells_queded[cell_position] = cell
 		
 	map.refresh_lights()
 	map.update_fov()
@@ -428,8 +460,12 @@ class Command:
 		kwargs = p_kwargs
 
 
-func new_command(p_op_code : OpCode, p_kwargs : Dictionary = {}):
-	command_queue.append(Command.new(p_op_code, p_kwargs))
+func enqueue_command(op_code : OpCode, kwargs : Dictionary = {}):
+	command_queue.append(Command.new(op_code, kwargs))
+
+
+func send_command(op_code: OpCode, kwargs: Dictionary, players : Array[String] = []):
+	Server.socket.send_match_state_async(Server.match_id, op_code, JSON.stringify(kwargs))
 
 
 ########
@@ -437,11 +473,12 @@ func new_command(p_op_code : OpCode, p_kwargs : Dictionary = {}):
 ########
 
 func test_fried_commands():
-#	new_command(OpCode.SAVE_MAP)
-	new_command(OpCode.NEW_MAP, {
-		"fried_file": "user://maps/0.json",
-	})
-#	new_command(OpCode.NEW_LIGHT, {
+#	enqueue_command(OpCode.SAVE_MAP)
+	if Game.is_host:
+		enqueue_command(OpCode.SET_MAP, {
+			"file": "user://maps/0.json",
+		})
+#	enqueue_command(OpCode.NEW_LIGHT, {
 #		"id": "0",
 #		"position": Utils.v3_to_array(Vector3(14, 0, 24.5)),
 #		"bright": 5,
@@ -450,35 +487,35 @@ func test_fried_commands():
 
 
 func test_commands():
-	new_command(OpCode.MESSAGE, {
+	enqueue_command(OpCode.MESSAGE, {
 		"message": "hello",
 	})
-	new_command(OpCode.NEW_MAP, {
+	enqueue_command(OpCode.SET_MAP, {
 		"id": "0",
 		"donjon_file": "res://resources/maps/donjon/large_rooms.json",
 	})
-	new_command(OpCode.NEW_ENTITY, {
+	enqueue_command(OpCode.NEW_ENTITY, {
 		"id": "0",
 		"label": "0",
 		"texture_path": "res://resources/entity_textures/monsters/undead/undead_101.png",
 		"position": Utils.v3_to_array(Vector3(14, 0, 24.5)),
 		"base_color": Utils.color_to_string(Color.BLUE),
 	})
-	new_command(OpCode.NEW_ENTITY, {
+	enqueue_command(OpCode.NEW_ENTITY, {
 		"id": "1",
 		"label": "1",
 		"texture_path": "res://resources/entity_textures/monsters/undead/undead_102.png",
 		"position": Utils.v3_to_array(Vector3(14.5, 0, 24)),
 		"base_color": Utils.color_to_string(Color.RED),
 	})
-	new_command(OpCode.NEW_ENTITY, {
+	enqueue_command(OpCode.NEW_ENTITY, {
 		"id": "2",
 		"label": "2",
 		"texture_path": "res://resources/entity_textures/monsters/undead/undead_103.png",
 		"position": Utils.v3_to_array(Vector3(14.5, 0, 24.5)),
 		"base_color": Utils.color_to_string(Color.YELLOW),
 	})
-	new_command(OpCode.NEW_ENTITY, {
+	enqueue_command(OpCode.NEW_ENTITY, {
 		"id": "3",
 		"label": "3",
 		"texture_path": "res://resources/entity_textures/monsters/undead/undead_104.png",

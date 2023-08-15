@@ -93,7 +93,7 @@ func get_cell_code(cell_position : Vector3i, cell : Cell, cell_light_intensity :
 	var cell_explored = cells_explored.get(cell_position)
 	if cell_explored and Game.is_high_end:
 		return solid_map.mesh_library.find_item_by_name('x' + cell_explored.skin)
-	
+
 	return -1
 
 
@@ -104,7 +104,7 @@ func set_cell(cell_position : Vector3i, cell : Cell):
 	if cell.is_in_view:
 		cell_light_intensity = cell.get_light_intensity(cell_position)
 		
-		if cell_light_intensity:
+		if cell_light_intensity >= 20:
 			cells_explored[cell_position] = cell
 
 	if cell:
@@ -120,13 +120,14 @@ func set_cell(cell_position : Vector3i, cell : Cell):
 func load_map(kwargs):
 	solid_map.clear()
 	
-	if "donjon_file" in kwargs:
+	id = kwargs["id"]
+	if "file" in kwargs:
+		_load_fried_json_file(kwargs["file"])
+	elif "donjon_file" in kwargs:
 		_load_donjon_json_file(kwargs["donjon_file"])
-		name = kwargs["id"]
-	if "fried_file" in kwargs:
-		_load_fried_json_file(kwargs["fried_file"])
-	if "map" in kwargs:
-		deserialize(kwargs["map"])
+	elif "id" in kwargs:
+		var map = await Server.load_object("map-" + id)
+		deserialize(map)
 		
 	if Game.is_host:
 		reset_cells(true)
@@ -283,7 +284,7 @@ func _process_preview_entity_move(delta):
 		entity_moving.position += normal_hovered * 0.1 + offset_entity_moving
 		entity_moving.position.y = 0
 		entity_moving.validate_position(fallback_position)
-		Server.send_message(Game.world.OpCode.SET_ENTITY_TARGET_POSITION, {
+		Game.world.send_command(Game.world.OpCode.SET_ENTITY_TARGET_POSITION, {
 			"id": entity_moving.id,
 			"target_position": Utils.v3_to_array(entity_moving.position), 
 		})
@@ -316,7 +317,7 @@ func _process_preview_light_move(delta):
 		light_moving.position = position_hovered
 		light_moving.position += normal_hovered * 0.1 + offset_light_moving
 		light_moving.position.y = 0
-		Server.send_message(Game.world.OpCode.SET_LIGHT_POSITION, {
+		Game.world.send_command(Game.world.OpCode.SET_LIGHT_POSITION, {
 			"id": light_moving.id,
 			"position": Utils.v3_to_array(light_moving.position), 
 		})
@@ -499,7 +500,7 @@ func serialize() -> Dictionary:
 		serialized_entities.append(serialized_entity)
 		
 	var serialized_map = {
-		"id": name,
+		"id": id,
 		"label": label,
 		"from": [min_x, min_y, min_z],
 		"to": [max_x, max_y, max_z],
@@ -512,7 +513,6 @@ func serialize() -> Dictionary:
 
 
 func deserialize(serialized_map : Dictionary):
-	id = serialized_map['id']
 	label = serialized_map['label']
 	min_x = serialized_map['from'][0]
 	min_y = serialized_map['from'][1]
@@ -533,7 +533,7 @@ func deserialize(serialized_map : Dictionary):
 		set_cell(cell_position, cell)
 	
 	for serialized_light in serialized_map.get('lights', {}):
-		Game.world.new_command(Game.world.OpCode.NEW_LIGHT, serialized_light)
+		Game.world.enqueue_command(Game.world.OpCode.NEW_LIGHT, serialized_light)
 	
 	for serialized_entity in serialized_map.get('entities', {}):
-		Game.world.new_command(Game.world.OpCode.NEW_ENTITY, serialized_entity)
+		Game.world.enqueue_command(Game.world.OpCode.NEW_ENTITY, serialized_entity)

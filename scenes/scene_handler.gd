@@ -1,10 +1,7 @@
 extends Node
 
-
 var world_scene = preload("res://scenes/world/world.tscn")
 var touch_demo = preload("res://scenes/demo_touch/Demo.tscn")
-
-
 
 @onready var canvas := $CanvasLayer as CanvasLayer
 @onready var main_menu := $CanvasLayer/MainMenu as Control
@@ -12,7 +9,6 @@ var touch_demo = preload("res://scenes/demo_touch/Demo.tscn")
 
 
 func _ready():
-	%StartButton.pressed.connect(start_world.bind())
 	%StartMaster.pressed.connect(start_master.bind())
 	%StartPlayer.pressed.connect(start_player.bind())
 	%TouchButton.pressed.connect(touch_demo_world.bind())
@@ -35,40 +31,38 @@ func _ready():
 #	DisplayServer.tts_speak("¿Ustedes piensan antes de hablar o hablan tras pensar?", voice_id)
 #	DisplayServer.tts_stop()
 
-func start_world(is_host):
+
+func start_world():
 	var email = "guest@magno.default"
 	var password = "password"
 	await request_authentication(email, password)
 	await connect_to_server()
 	
-	if is_host:
-		Game.is_host = true
-		Game.player_name = "Master"
-		if not await join_match():
-			print("not joined")
-			return
-	else:
-		Game.is_host = false
-		Game.player_name = "Player"
-		if not await join_match():
-			print("not joined")
-			return
+	if not await join_match():
+		print("not joined")
+		return
 		
 	print("joined")
 	main_menu.visible = false
 	var world : World = world_scene.instantiate()
-	print("world instantiated")
 	current_scene.add_child(world)
+	Game.world = world
 	
 	print("Loaded world")
 
 
 func start_master():
-	start_world(true)
+	Game.is_host = true
+	Game.campaign.read("CAM000")
+	Game.player_id = "MAS000"
+	
+	start_world()
 
 
 func start_player():
-	start_world(false)
+	Game.is_host = false
+	Game.player_id = "PLA001"
+	start_world()
 
 
 func touch_demo_world():
@@ -108,3 +102,6 @@ func _input(event):
 					DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 				else:
 					DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED)
+					
+			if event.keycode == KEY_F5:
+				get_tree().reload_current_scene()

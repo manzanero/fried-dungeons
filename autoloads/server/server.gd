@@ -1,10 +1,14 @@
 extends Node
 
-const KEY = "defaultkey"
-const HOST = "nakama.alejmans.dev"
-const PORT = 7350
-const SCHEMA = "https"
 
+signal message(op_code, kwargs)
+
+
+const KEY := "defaultkey"
+const HOST := "nakama.alejmans.dev"
+const PORT := 7350
+const SCHEMA := "https"
+const GAME := "fried-dungeons"
 
 var client : NakamaClient
 var session : NakamaSession
@@ -86,6 +90,7 @@ func join_match_async(is_host, match_name=null):
 		return false
 	
 	return true
+	
 
 func _on_match_join_error(error):
 	print ("Unable to join match: ", error.message)
@@ -103,19 +108,33 @@ func _on_network_peer_disconnected(peer_id):
 	print ("Peer left match: ", peer_id)
 
 
-##############
-# Operations #
-##############
-
-signal message(op_code, kwargs)
-
-
-func send_message(op_code: int, kwargs: Dictionary):
-	if socket:
-		socket.send_match_state_async(match_id, op_code, JSON.stringify(kwargs))
-
-
 func _on_match_state(match_state : NakamaRTAPI.MatchData):
 	var kwargs = JSON.parse_string(match_state.data)
-	print("Match state: %s %s" % [match_state.op_code, kwargs])
 	message.emit(match_state.op_code, kwargs)
+
+
+func save_object(key : String, data):
+	var acks : NakamaAPI.ApiStorageObjectAcks = await client.write_storage_objects_async(session, [
+		NakamaWriteStorageObject.new(GAME, key, 1, 1, Utils.dumps_json(data), "")
+	])
+	if acks.exception:
+		printerr(acks.exception)
+		
+		
+func load_object(key: String):
+	var read_object_id := NakamaStorageObjectId.new(GAME, key, session.user_id, "")
+	var result : NakamaAPI.ApiStorageObjects = await client.read_storage_objects_async(session, [read_object_id])
+	var objects := await result.objects
+	return Utils.loads_json(objects[0].value)
+
+
+func load_objects(keys: Array[String]) -> Array:
+	var ids := []
+	for key in keys:
+		ids.append(NakamaStorageObjectId.new(GAME, key, session.user_id, ""))
+	var result : NakamaAPI.ApiStorageObjects = await client.read_storage_objects_async(session, ids)
+	var objects := await result.objects
+	var values := []
+	for object in objects:
+		values.append(Utils.loads_json(object.value))
+	return values
