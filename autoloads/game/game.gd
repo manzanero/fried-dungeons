@@ -8,11 +8,13 @@ var is_pc : bool = true
 var is_host : bool = true
 var match_name : String = "frierd_dungeons__" + OS.get_environment("USERNAME")
 
-var campaign : Campaign = Campaign.new()
+var campaign_id : String
 var player_id : String
-var player : Player :
-	get:
-		return campaign.players[player_id]
+var master_id : String
+var campaign : Campaign
+var player : Player
+var master_permission : bool
+var entity_permissions := {}
 
 
 ###########
@@ -24,70 +26,84 @@ class Campaign:
 	var label : String
 	var players := {}
 	var maps : Array[String] = []
-
-
-	func read(p_id : String):
-		var data = Utils.read_json("user://campaigns/%s.json" % p_id)
+	
+	
+	func _init(p_id):
 		id = p_id
-		deserialize(data)
+
+
+	func async_load():
+		var data = await Server.async_load_object("campaign-" + id)
+		return deserialize(data)
+	
+	
+	func async_save():
+		var serialized_data = serialize()
+		await Server.async_save_object("campaign-" + id, serialized_data)
 	
 
 	func deserialize(data):
 		label = data['label']
 		for player_id in data['players']:
-			players[player_id] = Player.new().deserialize(data['players'][player_id])
+			players[player_id] = Player.new(player_id).deserialize(data['players'][player_id])
 		for map in data['maps']:
 			maps.append(map)
+		return self
 	
 	
 	func serialize():
-		var serialized_players = {}
+		var serialized_players := {}
 		for player in players:
 			serialized_players[player] = players[player].serialize()
-		
 		return {
 			"label": label,
 			"players": serialized_players,
 			"maps": maps,
 		}
-	
-	
-	func save():
-		Utils.write_json("user://campaings/%s.json" % id, serialize())
 		
 
 class Player:
+	var id : String
 	var username : String
+	var master_permission: bool
 	var entity_permissions : Dictionary
 	var map : String
-	var is_master: bool
 	
 	
-	func has_entity_permissions(entity_id : String, permission_codes : Array[int]) -> bool:
-		var permissions = entity_permissions.get(entity_id)
-		if not permissions:
-			return false
-		for code in permission_codes:
-			if code not in permissions:
-				return false
-		return true
+	func _init(p_id):
+		id = p_id
 
 
-	func deserialize(serialized_player) -> Player:
-		username = serialized_player['username']
-		entity_permissions = serialized_player.get('entity_permissions', {})
-		map = serialized_player.get('map', 'None')
-		is_master = serialized_player.get('is_master', false)
+	func deserialize(data) -> Player:
+		username = data['username']
+		master_permission = data.get('master_permission', false)
+		entity_permissions = data.get('entity_permissions', {})
+		map = data.get('map', 'None')
 		return self
 		
 		
 	func serialize():
 		return {
 			"username": username,
+			"master_permission": master_permission,
 			"entity_permissions": entity_permissions,
 			"map": map,
-			"is_master": is_master,
 		}
+
+
+func has_entity_permissions(entity_id : String, permission_codes : Array[int]) -> bool:
+	if master_permission:
+		return true
+	
+	var permissions = entity_permissions.get(entity_id)
+	if not permissions:
+		return false
+	
+	for code in permission_codes:
+		if float(code) not in permissions:
+			return false
+			
+	return true
 
 
 enum EntityPermission {

@@ -51,7 +51,6 @@ func connect_to_host(p_uri : String, p_timeout : int):
 # @param p_buffer - The buffer with the message to send.
 # @param p_reliable - If the message should be sent reliably (will be ignored by some protocols).
 func send(p_buffer : PackedByteArray, p_reliable : bool = true) -> int:
-	_ws.outbound_buffer_size = 1048576
 	return _ws.send(p_buffer, WebSocketPeer.WRITE_MODE_TEXT)
 
 func _process(delta):

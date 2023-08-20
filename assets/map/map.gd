@@ -3,6 +3,9 @@ extends Node3D
 
 signal changed
 
+var light_scene = preload("res://assets/light/light.tscn")
+var entity_scene = preload("res://assets/entity/entity.tscn")
+
 
 var id : String : 
 	get:
@@ -24,6 +27,7 @@ var cells_explored := {}
 var cache_cells := {}
 var entity_eyes : Entity
 
+var camera : Camera
 var entity_hovered : Entity
 var preview_entity_move_mode : bool
 var entity_moving : Entity
@@ -70,6 +74,7 @@ var cell_pointed : Cell :
 func _ready():
 	library.load_library()
 	solid_map.mesh_library = library.meshes
+	camera = Game.camera
 	
 	
 func _physics_process(delta):
@@ -126,7 +131,7 @@ func load_map(kwargs):
 	elif "donjon_file" in kwargs:
 		_load_donjon_json_file(kwargs["donjon_file"])
 	elif "id" in kwargs:
-		var map = await Server.load_object("map-" + id)
+		var map = await Server.async_load_object("map-" + id)
 		deserialize(map)
 		
 	if Game.is_host:
@@ -217,8 +222,8 @@ func _get_hit_info(raycast : PhysicsRayQueryParameters3D, collision_mask : int):
 	var ray_length = 1000
 	var mouse_pos = get_viewport().get_mouse_position()
 	var space_state = get_world_3d().direct_space_state
-	raycast.from = Game.camera.camera.project_ray_origin(mouse_pos)
-	raycast.to = raycast.from + Game.camera.camera.project_ray_normal(mouse_pos) * ray_length
+	raycast.from = camera.camera.project_ray_origin(mouse_pos)
+	raycast.to = raycast.from + camera.camera.project_ray_normal(mouse_pos) * ray_length
 	raycast.collision_mask = collision_mask
 	return space_state.intersect_ray(raycast)
 
@@ -244,7 +249,6 @@ func _process_entity_ray_hit():
 func _process_light_ray_hit():
 	var hit_info = _get_hit_info(light_raycast, Utils.get_bitmask(3))
 	if hit_info:
-#		print(hit_info["collider"].get_path())
 		light_hovered = hit_info["collider"].get_parent().get_parent()
 	else:
 		light_hovered = null
@@ -255,7 +259,7 @@ func _process_preview_entity_move(delta):
 		preview_entity_move_mode = true
 		entity_moving = entity_hovered
 		offset_entity_moving = entity_moving.position - position_hovered
-		preview_entity = Game.world.entity_scene.instantiate() as Entity
+		preview_entity = entity_scene.instantiate() as Entity
 		Game.world.map.add_child(preview_entity)
 		preview_entity.preview = true
 		preview_entity.texture_path = entity_moving.texture_path
@@ -284,7 +288,7 @@ func _process_preview_entity_move(delta):
 		entity_moving.position += normal_hovered * 0.1 + offset_entity_moving
 		entity_moving.position.y = 0
 		entity_moving.validate_position(fallback_position)
-		Game.world.send_command(Game.world.OpCode.SET_ENTITY_TARGET_POSITION, {
+		Commands.send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
 			"id": entity_moving.id,
 			"target_position": Utils.v3_to_array(entity_moving.position), 
 		})
@@ -295,7 +299,7 @@ func _process_preview_light_move(delta):
 		preview_light_move_mode = true
 		light_moving = light_hovered
 		offset_light_moving = light_moving.position - position_hovered
-		preview_light = Game.world.light_scene.instantiate() as Light
+		preview_light = light_scene.instantiate() as Light
 		Game.world.map.add_child(preview_light)
 		preview_light.preview = true
 		var preview_color = light_moving.color
@@ -317,7 +321,7 @@ func _process_preview_light_move(delta):
 		light_moving.position = position_hovered
 		light_moving.position += normal_hovered * 0.1 + offset_light_moving
 		light_moving.position.y = 0
-		Game.world.send_command(Game.world.OpCode.SET_LIGHT_POSITION, {
+		Commands.send(Commands.OpCode.SET_LIGHT_POSITION, {
 			"id": light_moving.id,
 			"position": Utils.v3_to_array(light_moving.position), 
 		})
@@ -333,7 +337,7 @@ const COVER := "Cover0"
 
 
 class MapTheme:
-	var floor := "Stone0"
+	var ground := "Stone0"
 	var wall := "Brick1"
 	var door_closed := "Door0"
 	var door_open := "Door1"
@@ -418,7 +422,7 @@ func deserialize_cell(serialized_cell : Dictionary) -> Cell:
 func _load_donjon_json_file(json_file_path):
 	print("Loading donjon map: " + json_file_path)
 
-	var map_data = Utils.read_json(json_file_path)
+	var map_data = Utils.load_json(json_file_path)
 	label = map_data["settings"]["name"]
 	var cells_data = map_data["cells"]
 	
@@ -445,7 +449,7 @@ func _load_donjon_json_file(json_file_path):
 				cell.donjon_code = donjon_code
 				match y:
 					-1:
-						cell.skin = map_theme.floor
+						cell.skin = map_theme.ground
 						cell.orientation = Data.orientations.pick_random()
 					0:
 						if cell_is_wall:
@@ -464,7 +468,7 @@ func _load_donjon_json_file(json_file_path):
 
 
 func _load_fried_json_file(json_file_path):
-	var serialized_map = Utils.read_json(json_file_path)
+	var serialized_map = Utils.loads_json(json_file_path)
 	deserialize(serialized_map)
 	
 
@@ -476,28 +480,11 @@ func serialize() -> Dictionary:
 	
 	var serialized_lights = []
 	for light in lights_parent.get_children():
-		var serialized_light := {}
-		serialized_light["id"] = light.id
-		serialized_light["position"] = Utils.v3_to_array(light.position)
-		serialized_light["intensity"] = light.intensity
-		serialized_light["bright"] = light.bright
-		serialized_light["faint"] = light.faint
-		serialized_light["follow"] = light.follow
-		serialized_lights.append(serialized_light)
+		serialized_lights.append(light.serialize())
 		
 	var serialized_entities = []
 	for entity in entities_parent.get_children():
-		var serialized_entity = {}
-		serialized_entity["id"] = entity.id
-		var entity_position = entity.target_position if entity.moving_to_target else entity.position
-		serialized_entity["position"] = Utils.v3_to_array(entity_position)
-		serialized_entity["label"] = entity.label
-		serialized_entity["health"] = entity.health
-		serialized_entity["health_max"] = entity.health_max
-		serialized_entity["base_size"] = entity.base_size
-		serialized_entity["base_color"] = Utils.color_to_string(entity.base_color)
-		serialized_entity["texture_path"] = entity.texture_path
-		serialized_entities.append(serialized_entity)
+		serialized_entities.append(entity.serialize())
 		
 	var serialized_map = {
 		"id": id,
@@ -533,7 +520,7 @@ func deserialize(serialized_map : Dictionary):
 		set_cell(cell_position, cell)
 	
 	for serialized_light in serialized_map.get('lights', {}):
-		Game.world.enqueue_command(Game.world.OpCode.NEW_LIGHT, serialized_light)
+		Commands.enqueue(Commands.OpCode.NEW_LIGHT, serialized_light)
 	
 	for serialized_entity in serialized_map.get('entities', {}):
-		Game.world.enqueue_command(Game.world.OpCode.NEW_ENTITY, serialized_entity)
+		Commands.enqueue(Commands.OpCode.NEW_ENTITY, serialized_entity)

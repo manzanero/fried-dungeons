@@ -7,6 +7,14 @@ func v3_to_v2i(v3 : Vector3) -> Vector2i:
 
 func v3_to_v3i(v3 : Vector3) -> Vector3i:
 	return Vector3i(v3.floor())
+	
+	
+func v3_to_str(v3 : Vector3) -> String:
+	return "(%s, %s, %s)" % [v3.x, v3.y, v3.z]
+	
+	
+func v3i_to_str(v3i : Vector3i) -> String:
+	return "(%s, %s, %s)" % [v3i.x, v3i.y, v3i.z]
 
 
 func array_to_v3(array : Array) -> Vector3:
@@ -38,11 +46,16 @@ func get_bitmask(x : int) -> int:
 
 
 func loads_json(data):
-	return JSON.parse_string(data)
+	var json = JSON.new()
+	json.parse(data)
+	var result = json.data
+	if result == null:
+		printerr("JSON load failed on line %s: %s" % [json.get_error_line(), json.get_error_message()])
+	return result
 
 
-func read_json(json_file_path : String):
-	var file = FileAccess.open(json_file_path, FileAccess.READ)
+func load_json(path : String):
+	var file = FileAccess.open(path, FileAccess.READ)
 	var open_error := FileAccess.get_open_error()
 	if open_error:
 		printerr("error reading json: %s" % error_string(open_error))
@@ -55,9 +68,9 @@ func dumps_json(data) -> String:
 	return JSON.stringify(data, "", false)
 
 
-func write_json(json_file_path : String, data):
+func dump_json(path : String, data):
 	var json_string := dumps_json(data)
-	var file := FileAccess.open(json_file_path, FileAccess.WRITE)
+	var file := FileAccess.open(path, FileAccess.WRITE)
 	var open_error := FileAccess.get_open_error()
 	if open_error:
 		printerr("error writing json: %s" % error_string(open_error))

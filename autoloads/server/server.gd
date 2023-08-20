@@ -2,118 +2,96 @@ extends Node
 
 
 signal message(op_code, kwargs)
-
+signal disconnected()
 
 const KEY := "defaultkey"
 const HOST := "nakama.alejmans.dev"
 const PORT := 7350
 const SCHEMA := "https"
+const TIMEOUT = 60
+const LOG_LEVEL = NakamaLogger.LOG_LEVEL.WARNING
+#const LOG_LEVEL = NakamaLogger.LOG_LEVEL.DEBUG
 const GAME := "fried-dungeons"
 
-var client : NakamaClient
+var cache_email : String
+var cache_password : String
 var session : NakamaSession
 var socket : NakamaSocket
+var room : NakamaRTAPI.Match
 var multiplayer_bridge
-var match_id
-
-var user_id := "local" :
-	get:
-		return session.user_id if session else user_id
+var user_id : String
 
 
-func _ready():
-	client = get_node("/root/Nakama").create_client(KEY, HOST, PORT, SCHEMA)
+@onready var client : NakamaClient = Nakama.create_client(KEY, HOST, PORT, SCHEMA, TIMEOUT, LOG_LEVEL)
 
 
-func authenticate_async(email, password) -> Error:
-	var result := OK
+func async_authenticate(email, password, vars=null) -> Error:
+	cache_email = email
+	cache_password = password
+	session = await client.authenticate_email_async(email, password, null, false, vars) as NakamaSession
+	if session.is_exception():
+		printerr("Nakama error on client.authenticate_email_async: %s" % [session.exception])
+		return session.exception.status_code as Error
 	
-	var new_session = await client.authenticate_email_async(email, password) as NakamaSession
+	user_id = session.user_id
+	return OK
+
+
+func async_connect_to_server() -> Error:
+	socket = Nakama.create_socket_from(client)
 	
-	if not new_session.is_exception():
-		session = new_session
-	else:
-		result = new_session.get_exception().status_code as Error
-
-	return result
-
-
-func connect_to_server_async() -> Error:
-	socket = get_node("/root/Nakama").create_socket_from(client)
-	socket.connected.connect(_on_socket_connected)
+	socket.received_error.connect(func(err): printerr("Nakama socket error: %s" % err))
+	socket.received_match_state.connect(_on_room_message)
 	socket.closed.connect(_on_socket_closed)
-	socket.received_error.connect(_on_socket_error)
-	socket.received_match_state.connect(_on_match_state)
-	
+
 	var result := await socket.connect_async(session) as NakamaAsyncResult
-	if not result.is_exception():
-		return OK
+	if result.is_exception():
+		printerr("Nakama error on socket.connect_async: %s" % [result.exception])
+		return ERR_CANT_CONNECT
 	
-	return ERR_CANT_CONNECT
-
-
-func _on_socket_connected():
-	print("Socket connected.")
+	return OK
 
 
 func _on_socket_closed():
-	socket = null
+	printerr("Nakama socket closed")
+	disconnected.emit()
 
 
-func _on_socket_error(err):
-	printerr("Socket error %s" % err)
+func async_update_authentication() -> Error:
+	if session.expired or session.would_expire_in(60):
+		session = await client.session_refresh_async(session)
+		if session.is_exception():
+			return await async_authenticate(cache_email, cache_password)
+
+	return OK
 	
 
-func join_match_async(is_host, match_name=null):
-	multiplayer_bridge = NakamaMultiplayerBridge.new(socket)
-	multiplayer_bridge.match_join_error.connect(_on_match_join_error)
-	multiplayer_bridge.match_joined.connect(_on_match_join)
-	
-	if is_host:
-		var result := await socket.create_match_async(match_name) as NakamaRTAPI.Match
-		if result.is_exception():
-			var exception: NakamaException = result.get_exception()
-			printerr("Errror joining the match: %s - %s" % [exception.status_code, exception.message])
-			
-		match_id = result.match_id
+func async_get_or_create_match(match_name):
+	room = await socket.create_match_async(match_name) as NakamaRTAPI.Match
+	if room.is_exception():
+		var exception: NakamaException = room.get_exception()
+		printerr("Error joining the match: %s - %s" % [exception.status_code, exception.message])
+		return ERR_CANT_CONNECT
 		
-	else:
-		await multiplayer_bridge.join_named_match(match_name)
-		match_id = multiplayer_bridge.match_id
-	
-		if multiplayer_bridge._users.size() == 1:
-			socket.leave_match_async(match_id)
-			return false
-			
-	if multiplayer_bridge._users.size() == 3:
-		socket.leave_match_async(match_id)
-		return false
-	
-	return true
-	
-
-func _on_match_join_error(error):
-	print ("Unable to join match: ", error.message)
+	return OK
 
 
-func _on_match_join() -> void:
-	print ("Joined match with id: ", multiplayer_bridge.match_id)
-
-
-func _on_network_peer_connected(peer_id):
-	print ("Peer joined match: ", peer_id)
-
-
-func _on_network_peer_disconnected(peer_id):
-	print ("Peer left match: ", peer_id)
-
-
-func _on_match_state(match_state : NakamaRTAPI.MatchData):
+func _on_room_message(match_state : NakamaRTAPI.MatchData):
 	var kwargs = JSON.parse_string(match_state.data)
 	message.emit(match_state.op_code, kwargs)
 
 
-func save_object(key : String, data):
+func async_send_room_message(op_code, kwargs, presences = []):
+	var result := await Server.socket.send_match_state_async(room.match_id, op_code, JSON.stringify(kwargs), presences) as NakamaAsyncResult
+	if not result or result.is_exception():
+		printerr("Nakama error on socket.send_match_state_async: %s" % [result.exception])
+		return ERR_CANT_CONNECT
+	
+	
+	return OK
+
+
+func async_save_object(key : String, data):
 	var acks : NakamaAPI.ApiStorageObjectAcks = await client.write_storage_objects_async(session, [
 		NakamaWriteStorageObject.new(GAME, key, 1, 1, Utils.dumps_json(data), "")
 	])
@@ -121,20 +99,21 @@ func save_object(key : String, data):
 		printerr(acks.exception)
 		
 		
-func load_object(key: String):
+func async_load_object(key: String):
 	var read_object_id := NakamaStorageObjectId.new(GAME, key, session.user_id, "")
 	var result : NakamaAPI.ApiStorageObjects = await client.read_storage_objects_async(session, [read_object_id])
-	var objects := await result.objects
+	var objects := result.objects
+	if not result.objects:
+		printerr("Object %s does not exist" % key)
 	return Utils.loads_json(objects[0].value)
 
 
-func load_objects(keys: Array[String]) -> Array:
+func async_load_objects(keys: Array[String]) -> Array:
 	var ids := []
 	for key in keys:
 		ids.append(NakamaStorageObjectId.new(GAME, key, session.user_id, ""))
 	var result : NakamaAPI.ApiStorageObjects = await client.read_storage_objects_async(session, ids)
-	var objects := await result.objects
 	var values := []
-	for object in objects:
+	for object in result.objects:
 		values.append(Utils.loads_json(object.value))
 	return values

@@ -123,7 +123,7 @@ func _on_delete_button_pressed():
 	queue_free()
 	entity.get_parent().remove_child(entity)
 	entity.queue_free()
-	Game.world.send_command(Game.world.OpCode.DELETE_ENTITY, {
+	Commands.send(Commands.OpCode.DELETE_ENTITY, {
 		"id": str(entity.name)
 	})
 
@@ -137,10 +137,9 @@ func _on_apply_button_pressed():
 	var is_new_entity = false	
 	if not entity:
 		is_new_entity = true
-		var world: World = Game.world
-		entity = world.entity_scene.instantiate()
-		world.map.entities_parent.add_child(entity)
-		entity.position = world.pointer.position + Vector3(0.5, 1, 0.5)
+		entity = Game.entity_scene.instantiate()
+		Game.world.map.entities_parent.add_child(entity)
+		entity.position = Game.world.pointer.position + Vector3(0.5, 1, 0.5)
 
 	entity.label = label_edit.text
 	entity.label_known = label_public_check.button_pressed
@@ -160,7 +159,7 @@ func _on_apply_button_pressed():
 		entity.texture_path = "res://resources/entity_textures/" + token_texture_label.text + ".png"
 	
 	if is_new_entity:
-		Game.world.send_command(Game.world.OpCode.NEW_ENTITY, {
+		Commands.send(Commands.OpCode.NEW_ENTITY, {
 			"id": str(entity.name),
 			"position": Utils.v3_to_array(entity.position),
 			"label": entity.label,
@@ -171,7 +170,7 @@ func _on_apply_button_pressed():
 			"texture_path": entity.texture_path,
 		})
 	else:
-		Game.world.send_command(Game.world.OpCode.CHANGE_ENTITY, {
+		Commands.send(Commands.OpCode.CHANGE_ENTITY, {
 			"id": str(entity.name),
 			"label": entity.label,
 			"health": entity.health,

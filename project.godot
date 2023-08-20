@@ -30,6 +30,7 @@ DebugMenu="*res://addons/debug_menu/debug_menu.tscn"
 InputManager="*res://addons/GDTIM-v2_1_2/InputManager.gd"
 Server="*res://autoloads/server/server.gd"
 Nakama="*res://addons/com.heroiclabs.nakama/Nakama.gd"
+Commands="*res://autoloads/commands/commands.gd"
 
 [display]
 

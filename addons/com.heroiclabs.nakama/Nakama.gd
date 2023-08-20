@@ -2,7 +2,7 @@
 extends Node
 
 # The default host address of the server.
-const DEFAULT_HOST : String = "nakama.alejmans.dev"
+const DEFAULT_HOST : String = "127.0.0.1"
 
 # The default port number of the server.
 const DEFAULT_PORT : int = 7350
@@ -11,14 +11,13 @@ const DEFAULT_PORT : int = 7350
 const DEFAULT_TIMEOUT = 3
 
 # The default protocol scheme for the client connection.
-const DEFAULT_CLIENT_SCHEME : String = "https"
+const DEFAULT_CLIENT_SCHEME : String = "http"
 
 # The default protocol scheme for the socket connection.
 const DEFAULT_SOCKET_SCHEME : String = "ws"
 
 # The default log level for the Nakama logger.
 const DEFAULT_LOG_LEVEL = NakamaLogger.LOG_LEVEL.DEBUG
-#const DEFAULT_LOG_LEVEL = NakamaLogger.LOG_LEVEL.WARNING
 
 var _http_adapter = null
 var logger = NakamaLogger.new()

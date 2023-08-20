@@ -327,6 +327,67 @@ icon = ExtResource("12_kylw6")
 icon_alignment = 1
 expand_icon = true
 
+[node name="BotRight" type="Control" parent="HUDCanvas/HUD"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="GridContainer" type="GridContainer" parent="HUDCanvas/HUD/BotRight"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -262.0
+offset_top = -109.0
+offset_right = -16.0
+offset_bottom = -14.0
+grow_horizontal = 0
+grow_vertical = 0
+columns = 2
+
+[node name="Map" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+layout_mode = 2
+text = "Selected Cell:"
+
+[node name="MapValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MAP000"
+
+[node name="SelectedCell" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+layout_mode = 2
+text = "Selected Cell:"
+
+[node name="SelectedCellValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "(0, 0, 0)"
+
+[node name="HoveredCell" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+layout_mode = 2
+text = "Hovered Cell:"
+
+[node name="HoveredCellValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "(0, 0, 0)"
+
+[node name="SelectedEntiy" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+layout_mode = 2
+text = "Selected Entity:"
+
+[node name="SelectedEntiyValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ENT000"
+
 [node name="Right" type="Control" parent="HUDCanvas/HUD"]
 layout_mode = 1
 anchors_preset = 6

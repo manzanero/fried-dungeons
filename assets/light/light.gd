@@ -82,7 +82,7 @@ func _set_color(value : Color):
 	body.mesh.surface_get_material(0).albedo_color = value
 
 
-func get_intensity(target_position : Vector3) -> int:
+func get_intensity(target_position : Vector3) -> float:
 	var d : float = ((target_position - position) * Vector3(1, 0, 1)).length()
 	if d <= bright:
 		return intensity
@@ -105,8 +105,8 @@ func _update():
 
 
 func forget():
-	for cell_position in cells:
-		var cell : Map.Cell = cells[cell_position]
+	for lights_cell_position in cells:
+		var cell : Map.Cell = cells[lights_cell_position]
 		cell.lights.erase(self)
 		
 	cells.clear()
@@ -118,9 +118,9 @@ const RANGE = 10
 func update_fov():
 	forget()
 	
-	var c_x : int = position.x
-	var c_y : int = position.y
-	var c_z : int = position.z
+	var c_x := int(position.x)
+	var c_y := int(position.y)
+	var c_z := int(position.z)
 	
 	var map = Game.world.map
 	var floors = Game.world.map.floors
@@ -130,17 +130,32 @@ func update_fov():
 	for y in [c_y - 1, c_y]:
 		for x in range(c_x - RANGE, c_x + RANGE + 1):
 			for z in range(c_z - RANGE, c_z + RANGE + 1):
-				var cell_position = Vector3i(x, y, z)
-				var cell = map.cells.get(cell_position)
+				var candidate_cell_position = Vector3i(x, y, z)
+				var cell = map.cells.get(candidate_cell_position)
 				if not cell:
 					continue
 				
 				var is_in_fov = floors[0].is_in_view(Vector2i(x, z))
 				if is_in_fov:
-					cells[cell_position] = cell
+					cells[candidate_cell_position] = cell
 					cell.lights.append(self)
 				
 				
 func _on_cell_changed():
 	update_fov()
 	Game.world.map.update_fov()
+
+
+###############
+# Serializers #
+###############
+
+func serialize():
+	var serialized_light := {}
+	serialized_light["id"] = id
+	serialized_light["position"] = Utils.v3_to_array(position)
+	serialized_light["intensity"] = intensity
+	serialized_light["bright"] = bright
+	serialized_light["faint"] = faint
+	serialized_light["follow"] = follow
+	return serialized_light

@@ -47,7 +47,7 @@ func _on_delete_button_pressed():
 	queue_free()
 	light.get_parent().remove_child(light)
 	light.queue_free()
-	Game.world.send_command(Game.world.OpCode.DELETE_LIGHT, {
+	Commands.send(Commands.OpCode.DELETE_LIGHT, {
 		"id": str(light.name)
 	})
 	
@@ -63,18 +63,18 @@ func _on_apply_button_pressed():
 	var is_new_light = false
 	if not light:
 		is_new_light = true
-		light = Game.world.light_scene.instantiate()
+		light = Game.light_scene.instantiate()
 		Game.world.map.lights_parent.add_child(light)
 		light.position = Game.world.pointer.position + Vector3(0.5, Light.DEFAULT_HEIGHT, 0.5)
 
-	light.intensity = intensity_edit.value
-	light.bright = bright_edit.value
-	light.faint = faint_edit.value
+	light.intensity = int(intensity_edit.value)
+	light.bright = int(bright_edit.value)
+	light.faint = int(faint_edit.value)
 	light.follow = following_edit.text
 	light.name = id_edit.text
 	
 	if is_new_light:
-		Game.world.send_command(Game.world.OpCode.NEW_LIGHT, {
+		Commands.send(Commands.OpCode.NEW_LIGHT, {
 			"position": Utils.v3_to_array(light.position),
 			"id": str(light.name),
 			"intensity": light.intensity,
@@ -83,7 +83,7 @@ func _on_apply_button_pressed():
 			"follow": light.follow,
 		})
 	else:
-		Game.world.send_command(Game.world.OpCode.CHANGE_LIGHT, {
+		Commands.send(Commands.OpCode.CHANGE_LIGHT, {
 			"id": str(light.name),
 			"intensity": light.intensity,
 			"bright": light.bright,

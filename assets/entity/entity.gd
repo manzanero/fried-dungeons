@@ -74,7 +74,7 @@ func _ready():
 	_set_health_known(health_known)
 	
 
-func _process(delta):
+func _process(_delta):
 	label_control.position = Game.camera.camera.unproject_position(position)
 
 
@@ -111,8 +111,8 @@ func _move_process(delta):
 
 
 func validate_position(fallback_position := Vector3(0, 0, 0)):
-	var cell_position = Vector3i(position)
-	var cell : Map.Cell = Game.world.map.cells.get(cell_position)
+	var new_cell_position = Vector3i(position)
+	var cell : Map.Cell = Game.world.map.cells.get(new_cell_position)
 	
 	if not cell:
 		position = fallback_position
@@ -123,13 +123,12 @@ func validate_position(fallback_position := Vector3(0, 0, 0)):
 		cell.is_empty = true
 		cell.is_transparent = true
 		cell.is_open = true
-		Game.world.map.set_cell(cell_position, cell)
+		Game.world.map.set_cell(new_cell_position, cell)
 		Game.world.map.refresh_lights()
-		Game.world.send_command(Game.world.OpCode.SET_CELLS, {
-			"cells": [Game.world.map.serialize_cell(cell_position, cell)]
+		Commands.send(Commands.OpCode.SET_CELLS, {
+			"cells": [Game.world.map.serialize_cell(new_cell_position, cell)]
 		})
-		
-		
+
 	if cell.is_empty:
 		return 
 
@@ -171,7 +170,7 @@ func _update():
 	
 	# calculate if entity has been moved
 	if position_changed:
-		Game.world.send_command(Game.world.OpCode.SET_ENTITY_TARGET_POSITION, {
+		Commands.send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
 			"id": name,
 			"target_position": Utils.v3_to_array(position), 
 		})
@@ -193,6 +192,8 @@ func change(kwargs):
 		
 	if "label" in kwargs: 
 		label = kwargs["label"]
+	if "label_known" in kwargs: 
+		label_known = kwargs["label_known"]
 	if "texture_path" in kwargs: 
 		texture_path = kwargs["texture_path"]
 	if "base_color" in kwargs: 
@@ -203,8 +204,8 @@ func change(kwargs):
 		health = kwargs["health"]
 	if "health_max" in kwargs: 
 		health_max = kwargs["health_max"]
-	if "health_max" in kwargs: 
-		health_max = kwargs["health_max"]
+	if "health_known" in kwargs: 
+		health_known = kwargs["health_known"]
 
 	changed.emit()
 
@@ -220,6 +221,10 @@ func _set_label(value):
 
 func _set_label_known(value):
 	label_known = value
+	if not Game.has_entity_permissions(id, [Game.EntityPermission.GET_LABEL]):
+		label_label.visible = false
+		return
+
 	label_label.visible = value
 
 
@@ -237,6 +242,10 @@ func _set_health_max(value):
 
 func _set_health_known(value):
 	health_known = value
+	if not Game.has_entity_permissions(id, [Game.EntityPermission.GET_HEALTH]):
+		healt_bar.visible = false
+		return
+		
 	healt_bar.visible = value
 
 
@@ -273,3 +282,24 @@ func _set_texture(value):
 func _set_body_tint(value):
 	body_tint = value
 	body.get_surface_override_material(0).albedo_color = body_tint
+
+
+###############
+# Serializers #
+###############
+
+func serialize():
+	var serialized_entity = {}
+	serialized_entity["id"] = id
+	var entity_position = target_position if moving_to_target else position
+	serialized_entity["position"] = Utils.v3_to_array(entity_position)
+	serialized_entity["label"] = label
+	serialized_entity["label_known"] = health_known
+	serialized_entity["health"] = health
+	serialized_entity["health_max"] = health_max
+	serialized_entity["health_known"] = health_known
+	serialized_entity["base_size"] = base_size
+	serialized_entity["base_color"] = Utils.color_to_string(base_color)
+	serialized_entity["texture_path"] = texture_path
+	return serialized_entity
+	

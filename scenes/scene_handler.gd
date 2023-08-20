@@ -10,7 +10,9 @@ var touch_demo = preload("res://scenes/demo_touch/Demo.tscn")
 
 func _ready():
 	%StartMaster.pressed.connect(start_master.bind())
-	%StartPlayer.pressed.connect(start_player.bind())
+	%StartPlayer1.pressed.connect(start_player1.bind())
+	%StartPlayer2.pressed.connect(start_player2.bind())
+	%StartPlayer3.pressed.connect(start_player3.bind())
 	%TouchButton.pressed.connect(touch_demo_world.bind())
 	
 	Game.is_high_end = "Windows" == Utils.get_os_name()
@@ -30,68 +32,75 @@ func _ready():
 #	var voice_id = voices[0]
 #	DisplayServer.tts_speak("¿Ustedes piensan antes de hablar o hablan tras pensar?", voice_id)
 #	DisplayServer.tts_stop()
-
-
-func start_world():
-	var email = "guest@magno.default"
-	var password = "password"
-	await request_authentication(email, password)
-	await connect_to_server()
 	
-	if not await join_match():
-		print("not joined")
-		return
-		
-	print("joined")
-	main_menu.visible = false
-	var world : World = world_scene.instantiate()
-	current_scene.add_child(world)
-	Game.world = world
+	Server.message.connect(Commands.enqueue)
+	Server.disconnected.connect(leave_world)
 	
-	print("Loaded world")
-
 
 func start_master():
 	Game.is_host = true
-	Game.campaign.read("CAM000")
+	Game.campaign_id = "CAM000"
 	Game.player_id = "MAS000"
-	
 	start_world()
 
 
-func start_player():
+func start_player1():
 	Game.is_host = false
+	Game.campaign_id = "CAM000"
 	Game.player_id = "PLA001"
 	start_world()
 
 
-func touch_demo_world():
+func start_player2():
+	Game.is_host = false
+	Game.campaign_id = "CAM000"
+	Game.player_id = "PLA002"
+	start_world()
+
+
+func start_player3():
+	Game.is_host = false
+	Game.campaign_id = "CAM000"
+	Game.player_id = "PLA003"
+	start_world()
+	
+
+func start_world():
+	var email = "guest@magno.default"
+	var password = "password"
+	if await Server.async_authenticate(email, password): 
+		return
+	if await Server.async_connect_to_server(): 
+		return
+	if await Server.async_get_or_create_match(Game.match_name): 
+		return
+	
+	Game.campaign = await Game.Campaign.new("CAM000").async_load()
+	Game.player = Game.campaign.players[Game.player_id]
+	Game.master_permission = Game.player.master_permission
+	Game.entity_permissions = Game.player.entity_permissions
+	for player_id in Game.campaign.players:
+		var player : Game.Player = Game.campaign.players[player_id]
+		if player.master_permission:
+			Game.master_id = player_id
+			
+	var world : World = world_scene.instantiate()
+	current_scene.add_child(world)
+	Game.world = world
+	
 	main_menu.visible = false
+	
+
+func leave_world():
+	Game.world.queue_free()
+	
+	main_menu.visible = true
+
+
+func touch_demo_world():
 	current_scene.add_child(touch_demo.instantiate())
-
-
-func request_authentication(email, password):
-	print("authenticating user %s" % email)
-	var result: int = await Server.authenticate_async(email, password)
-	if result == OK:
-		print("authenticated user %s" % email)
-	else:
-		print("Cannot authenticate user %s" % email)
-
-
-func connect_to_server():
-	print("connecting to server")
-	var result: int = await Server.connect_to_server_async()
-	if result == OK:
-		print("connected user to server")
-	elif result == ERR_CANT_CONNECT:
-		print("Cannot connect user to server")
-
-
-func join_match():
-	print("joining to server")
-	return await Server.join_match_async(Game.is_host, Game.match_name)
-	print("joined to server")
+	
+	main_menu.visible = false
 	
 	
 func _input(event):

@@ -7,7 +7,6 @@ extends Node
 
 
 func load_library():
-	var skins_len = meshes.get_item_list().size()
 	var meshes_len = 16
 	var meshes_len_10 = meshes_len
 	var meshes_len_9 = meshes_len * 2
@@ -16,6 +15,12 @@ func load_library():
 	var meshes_len_6 = meshes_len * 5
 	var meshes_len_5 = meshes_len * 6
 	var meshes_len_4 = meshes_len * 7
+	
+	# clear previous generated meshes
+	for i in meshes.get_item_list().size():
+		if i >= meshes_len:
+			meshes.remove_item(i)
+			
 	
 	var shape = meshes.get_item_shapes(0)[0].duplicate(true) as Shape3D
 	var material = ShaderMaterial.new()

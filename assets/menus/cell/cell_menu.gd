@@ -68,7 +68,7 @@ func _on_submit_button_button_pressed():
 	Game.world.map.refresh_lights()
 	Game.world.map.update_fov()
 		
-	Game.world.send_command(Game.world.OpCode.SET_CELLS, {
+	Commands.send(Commands.OpCode.SET_CELLS, {
 		"cells": serialized_cells
 	})
 
@@ -124,7 +124,7 @@ func _process_target_ray_hit():
 		is_targeting_cell_position = false
 
 
-func _process(delta):
+func _process(_delta):
 	_process_target_ray_hit()
 	
 	if is_building and is_targeting_cell_position and visible:

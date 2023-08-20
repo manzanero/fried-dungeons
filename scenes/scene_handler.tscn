@@ -40,7 +40,7 @@ theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
 [node name="Panel" type="Panel" parent="CanvasLayer/MainMenu/MarginContainer"]
-custom_minimum_size = Vector2(400, 90)
+custom_minimum_size = Vector2(400, 164.465)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -60,21 +60,25 @@ theme_override_constants/margin_bottom = 10
 [node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer"]
 layout_mode = 2
 
-[node name="StartButton" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-text = "START"
-
 [node name="StartMaster" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Start Master"
 
-[node name="StartPlayer" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="StartPlayer1" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Start player"
+text = "Start player 1"
+
+[node name="StartPlayer2" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Start player 2"
+
+[node name="StartPlayer3" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Start player 3"
 
 [node name="TouchButton" type="Button" parent="CanvasLayer/MainMenu/MarginContainer/Panel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true

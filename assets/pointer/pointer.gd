@@ -3,7 +3,7 @@ extends Node3D
 
 
 var cell_position : Vector3i
-var pointing : bool :
+var is_pointing : bool :
 	get:
 		return visible
 	set(value):
@@ -29,7 +29,7 @@ func move_to(p_cell_position : Vector3i):
 	
 
 func get_cell():
-	return Game.world.map.cells.get(cell_position) if pointing else null
+	return Game.world.map.cells.get(cell_position) if is_pointing else null
 
 
 ###########

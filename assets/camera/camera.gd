@@ -91,10 +91,10 @@ func _unhandled_input(event):
 	
 	# Touch
 	if event is InputEventSingleScreenDrag:
-		var offset_move = event.relative * 0.001 * (zoom + 1)
+		var mobile_offset_move = event.relative * 0.001 * (zoom + 1)
 		var transform_forward = Vector3.FORWARD.rotated(Vector3.UP, rotation.y)
 		var transform_left = Vector3.LEFT.rotated(Vector3.UP, rotation.y)
-		new_position += offset_move.y * transform_forward + offset_move.x * transform_left
+		new_position += mobile_offset_move.y * transform_forward + mobile_offset_move.x * transform_left
 		new_position.x = clamp(new_position.x, min_x, max_x)
 		new_position.z = clamp(new_position.z, min_z, max_z)
 
