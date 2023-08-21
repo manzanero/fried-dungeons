@@ -126,12 +126,13 @@ func load_map(kwargs):
 	solid_map.clear()
 	
 	id = kwargs["id"]
+	label = Game.campaign.maps[id]["label"]
 	if "file" in kwargs:
 		_load_fried_json_file(kwargs["file"])
 	elif "donjon_file" in kwargs:
 		_load_donjon_json_file(kwargs["donjon_file"])
 	elif "id" in kwargs:
-		var map = await Server.async_load_object("map-" + id)
+		var map = await Server.async_load_object("fried-dungeons-maps", id)  
 		deserialize(map)
 		
 	if Game.is_host:
@@ -288,7 +289,7 @@ func _process_preview_entity_move(delta):
 		entity_moving.position += normal_hovered * 0.1 + offset_entity_moving
 		entity_moving.position.y = 0
 		entity_moving.validate_position(fallback_position)
-		Commands.send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
+		Commands.async_send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
 			"id": entity_moving.id,
 			"target_position": Utils.v3_to_array(entity_moving.position), 
 		})
@@ -321,7 +322,7 @@ func _process_preview_light_move(delta):
 		light_moving.position = position_hovered
 		light_moving.position += normal_hovered * 0.1 + offset_light_moving
 		light_moving.position.y = 0
-		Commands.send(Commands.OpCode.SET_LIGHT_POSITION, {
+		Commands.async_send(Commands.OpCode.SET_LIGHT_POSITION, {
 			"id": light_moving.id,
 			"position": Utils.v3_to_array(light_moving.position), 
 		})
@@ -500,7 +501,6 @@ func serialize() -> Dictionary:
 
 
 func deserialize(serialized_map : Dictionary):
-	label = serialized_map['label']
 	min_x = serialized_map['from'][0]
 	min_y = serialized_map['from'][1]
 	min_z = serialized_map['from'][2]
@@ -520,7 +520,7 @@ func deserialize(serialized_map : Dictionary):
 		set_cell(cell_position, cell)
 	
 	for serialized_light in serialized_map.get('lights', {}):
-		Commands.enqueue(Commands.OpCode.NEW_LIGHT, serialized_light)
+		Commands.enqueue(Game.player_id, Commands.OpCode.NEW_LIGHT, serialized_light)
 	
 	for serialized_entity in serialized_map.get('entities', {}):
-		Commands.enqueue(Commands.OpCode.NEW_ENTITY, serialized_entity)
+		Commands.enqueue(Game.player_id, Commands.OpCode.NEW_ENTITY, serialized_entity)

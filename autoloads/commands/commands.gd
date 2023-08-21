@@ -1,7 +1,8 @@
 extends Node
 
-signal empty_queue
-signal map_saved
+signal executed_command(command)
+signal empty_queue()
+signal map_saved()
 
 var map_scene = preload("res://assets/map/map.tscn")
 var light_scene = preload("res://assets/light/light.tscn")
@@ -13,10 +14,8 @@ var queue : Array[Command] = []
 
 enum OpCode {
 	MESSAGE,
-	SET_CAMPAIGN,
-	SEND_CAMPAIGN,
-	SET_MAP,
 	SEND_MAP,
+	SET_MAP,
 	SAVE_MAP,
 	NEW_ENTITY,
 	CHANGE_ENTITY,
@@ -33,61 +32,39 @@ enum OpCode {
 
 func execute(command : Command):
 	match command.op_code:
-		OpCode.MESSAGE: _command_message(command.kwargs)
-		OpCode.SEND_CAMPAIGN: _command_send_campaign(command.kwargs)
-		OpCode.SET_CAMPAIGN: _command_set_campaign(command.kwargs)
-		OpCode.SEND_MAP: _command_send_map(command.kwargs)
-		OpCode.SET_MAP: _command_set_map(command.kwargs)
-		OpCode.SAVE_MAP: _command_save_map(command.kwargs)
-		OpCode.NEW_ENTITY: _command_new_entity(command.kwargs)
-		OpCode.CHANGE_ENTITY: _command_change_entity(command.kwargs)
-		OpCode.DELETE_ENTITY: _command_delete_entity(command.kwargs)
-		OpCode.SET_ENTITY_POSITION: _command_set_entity_position(command.kwargs)
-		OpCode.SET_ENTITY_TARGET_POSITION: _command_set_entity_target_position(command.kwargs)
-		OpCode.SET_CELLS: _command_set_cells(command.kwargs)
-		OpCode.NEW_LIGHT: _command_new_light(command.kwargs)
-		OpCode.CHANGE_LIGHT: _command_change_light(command.kwargs)
-		OpCode.DELETE_LIGHT: _command_delete_light(command.kwargs)
-		OpCode.SET_LIGHT_POSITION: _command_set_light_position(command.kwargs)
-
-
-func _command_message(kwargs : Dictionary):
-	print(kwargs.get("message"))
-
-
-func _command_send_campaign(kwargs : Dictionary):
-	if not Game.is_host:
-		return
+		OpCode.MESSAGE: _command_message(command)
+		OpCode.SEND_MAP: _command_send_map(command)
+		OpCode.SET_MAP: _command_set_map(command)
+		OpCode.SAVE_MAP: _command_save_map(command)
+		OpCode.NEW_ENTITY: _command_new_entity(command)
+		OpCode.CHANGE_ENTITY: _command_change_entity(command)
+		OpCode.DELETE_ENTITY: _command_delete_entity(command)
+		OpCode.SET_ENTITY_POSITION: _command_set_entity_position(command)
+		OpCode.SET_ENTITY_TARGET_POSITION: _command_set_entity_target_position(command)
+		OpCode.SET_CELLS: _command_set_cells(command)
+		OpCode.NEW_LIGHT: _command_new_light(command)
+		OpCode.CHANGE_LIGHT: _command_change_light(command)
+		OpCode.DELETE_LIGHT: _command_delete_light(command)
+		OpCode.SET_LIGHT_POSITION: _command_set_light_position(command)
 	
-	send(OpCode.SET_CAMPAIGN, {
-		"campaign": Game.campaign.serialize(),
-		"player_ids": [kwargs["player_id"]],
-	})
+	executed_command.emit(command)
 
 
-func _command_set_campaign(kwargs : Dictionary):
-	Game.campaign.deserialize(kwargs["campaign"])
-	
-	send(OpCode.SEND_MAP, {
-		"player_id": Game.player_id,
-	})
-	
-	Game.world.player_name_tab.set_tab_title(0, Game.player.username)
+func _command_message(command : Command):
+	print(command.kwargs.get("message"))
 
 
-func _command_send_map(kwargs : Dictionary):
-	if not Game.is_host:
-		return
-		
-	await Server.async_save_object("map-" + Game.world.map.id, Game.world.map.serialize())
+func _command_send_map(command : Command):
+	await Server.async_save_object("fried-dungeons-maps", Game.world.map.id, Game.world.map.serialize())
 
-	send(OpCode.SET_MAP, {
-		"id": Game.world.map.id,
-		"player_ids": [kwargs["player_id"]],
-	})
+	await async_send(OpCode.SET_MAP, {
+		"id": command.kwargs["id"]
+	}, [
+		command.player_id
+	])
 
 
-func _command_set_map(kwargs : Dictionary):
+func _command_set_map(command : Command):
 	if Game.world.map:
 		Game.world.maps_parent.remove_child(Game.world.map)
 		Game.world.map.queue_free()
@@ -95,27 +72,27 @@ func _command_set_map(kwargs : Dictionary):
 	Game.world.map = map_scene.instantiate() as Map
 	Game.world.maps_parent.add_child(Game.world.map)
 	
-	Game.world.map.load_map(kwargs)
+	Game.world.map.load_map(command.kwargs)
 
 
-func _command_save_map(_kwargs := {}):
-	await Server.async_save_object("map-" + Game.world.map.id, Game.world.map.serialize())
+func _command_save_map(_command : Command):
+	await Server.async_save_object("fried-dungeons-maps", Game.world.map.id, Game.world.map.serialize())
 	map_saved.emit()
 
 
-func _command_new_entity(kwargs : Dictionary):
+func _command_new_entity(command : Command):
 	var entity := entity_scene.instantiate() as Entity
-	entity.name = kwargs["id"]
+	entity.name = command.kwargs["id"]
 	Game.world.map.entities_parent.add_child(entity)
-	_command_set_entity_position(kwargs)
-	_command_change_entity(kwargs)
+	_command_set_entity_position(command)
+	_command_change_entity(command)
 	
 	Game.world.populate_tokens_tree()
 
 
-func _command_change_entity(kwargs : Dictionary):
-	var entity : Entity = Game.world.map.entities_parent.get_node(kwargs["id"])
-	entity.change(kwargs)
+func _command_change_entity(command : Command):
+	var entity : Entity = Game.world.map.entities_parent.get_node(command.kwargs["id"])
+	entity.change(command.kwargs)
 	
 	if entity == Game.world.map.entity_eyes:
 		Game.world.map.update_fov()
@@ -123,8 +100,8 @@ func _command_change_entity(kwargs : Dictionary):
 	Game.world.populate_tokens_tree()
 
 
-func _command_delete_entity(kwargs):
-	var entity : Entity = Game.world.map.entities_parent.get_node(kwargs["id"])
+func _command_delete_entity(command : Command):
+	var entity : Entity = Game.world.map.entities_parent.get_node(command.kwargs["id"])
 	if entity:
 		entity.get_parent().remove_child(entity)
 		entity.queue_free()
@@ -132,21 +109,21 @@ func _command_delete_entity(kwargs):
 	Game.world.populate_tokens_tree()
 
 
-func _command_set_entity_position(kwargs):
-	var entity : Entity = Game.world.map.entities_parent.get_node(kwargs["id"])
-	entity.position = Utils.array_to_v3(kwargs["position"])
+func _command_set_entity_position(command : Command):
+	var entity : Entity = Game.world.map.entities_parent.get_node(command.kwargs["id"])
+	entity.position = Utils.array_to_v3(command.kwargs["position"])
 	
 	if entity == Game.world.map.entity_eyes:
 		Game.world.map.update_fov()
 
 
-func _command_set_entity_target_position(kwargs):
-	var entity : Entity = Game.world.map.entities_parent.get_node(kwargs["id"])
-	entity.target_position = Utils.array_to_v3(kwargs["target_position"])
+func _command_set_entity_target_position(command : Command):
+	var entity : Entity = Game.world.map.entities_parent.get_node(command.kwargs["id"])
+	entity.target_position = Utils.array_to_v3(command.kwargs["target_position"])
 	
 	
-func _command_set_cells(kwargs):
-	var serialized_cells = kwargs["cells"]
+func _command_set_cells(command : Command):
+	var serialized_cells = command.kwargs["cells"]
 	for serialized_cell in serialized_cells:
 		var cell_position = Vector3i(
 			serialized_cell["x"], 
@@ -159,25 +136,25 @@ func _command_set_cells(kwargs):
 	Game.world.map.update_fov()
 	
 	
-func _command_new_light(kwargs):
+func _command_new_light(command : Command):
 	var light := light_scene.instantiate() as Light
-	light.id = kwargs["id"]
+	light.id = command.kwargs["id"]
 	Game.world.map.lights_parent.add_child(light)
-	_command_set_light_position(kwargs)
-	_command_change_light(kwargs)
+	_command_set_light_position(command)
+	_command_change_light(command)
 	
 	Game.world.map.update_fov()
 
 
-func _command_change_light(kwargs):
-	var light : Light = Game.world.map.lights_parent.get_node(kwargs["id"])
-	light.change(kwargs)
+func _command_change_light(command : Command):
+	var light : Light = Game.world.map.lights_parent.get_node(command.kwargs["id"])
+	light.change(command.kwargs)
 	
 	Game.world.map.update_fov()
 
 
-func _command_delete_light(kwargs):
-	var light : Light = Game.world.map.lights_parent.get_node(kwargs["id"])
+func _command_delete_light(command : Command):
+	var light : Light = Game.world.map.lights_parent.get_node(command.kwargs["id"])
 	if light:
 		light.get_parent().remove_child(light)
 		light.queue_free()
@@ -185,9 +162,9 @@ func _command_delete_light(kwargs):
 	Game.world.map.update_fov()
 	
 	
-func _command_set_light_position(kwargs):
-	var light : Light = Game.world.map.lights_parent.get_node(kwargs["id"])
-	light.position = Utils.v3_to_v3i(Utils.array_to_v3(kwargs["position"]))
+func _command_set_light_position(command : Command):
+	var light : Light = Game.world.map.lights_parent.get_node(command.kwargs["id"])
+	light.position = Utils.v3_to_v3i(Utils.array_to_v3(command.kwargs["position"]))
 	
 	Game.world.map.update_fov()
 
@@ -197,26 +174,33 @@ func _command_set_light_position(kwargs):
 ###########
 
 class Command:
+	var player_id : String
 	var op_code : OpCode
 	var kwargs : Dictionary
 	
-	func _init(p_op_code, p_kwargs):
+	func _init(p_player_id : String, p_op_code : OpCode, p_kwargs : Dictionary):
+		player_id = p_player_id
 		op_code = p_op_code
 		kwargs = p_kwargs
 
 
-func enqueue(op_code : OpCode, kwargs : Dictionary = {}):
-	var player_ids = kwargs.get('player_ids', [])
-	if player_ids and Game.player_id not in player_ids:
+func enqueue(player_id : String, op_code : OpCode, kwargs : Dictionary = {}):
+	if kwargs.has("recipient_users_ids") and Game.player_id not in kwargs["recipient_users_ids"]:
 		return
+	
+	queue.append(Command.new(player_id, op_code, kwargs))
+	print("Queued command: [%s] <-- [%s]: %s" % [Game.player_label, Game.group_users[player_id], OpCode.keys()[op_code]])
+
+
+func async_send(op_code : OpCode, kwargs : Dictionary, player_ids = null):
+	if player_ids is Array:
+		kwargs["recipient_users_ids"] = player_ids
 		
-	queue.append(Command.new(op_code, kwargs))
-	print("Player %s <-- queued command: %s" % [Game.player_id, OpCode.keys()[op_code]])
-
-
-func send(op_code : OpCode, kwargs : Dictionary, player_ids : Array[String] = []):
+	await Server.async_send_room_message(op_code, kwargs)
+	var player_labels := "All"
 	if player_ids:
-		kwargs["player_ids"] = player_ids
-		
-	Server.async_send_room_message(op_code, kwargs)
-	print("Player %s --> sended command: %s" % [Game.player_id, OpCode.keys()[op_code]])
+		player_labels = "[" + Game.group_users[player_ids.pop_front()]
+		for player_id in player_ids:
+			player_labels += ", " + Game.group_users[player_id]
+		player_labels += "]"
+	print("Sended command: [%s] --> %s: %s" % [Game.player_label, player_labels, OpCode.keys()[op_code]])

@@ -48,6 +48,7 @@ func _ready():
 		child.queue_free()
 		
 	commands_panel.visible = Game.is_host
+	player_name_tab.set_tab_title(0, Game.player_label)
 	
 #	if Game.is_host:
 #		save_timer.timeout.connect(enqueue.bind(OpCode.SAVE_MAP))
@@ -78,17 +79,20 @@ func _ready():
 	tokens_tree.item_selected.connect(_select_tokens_tree)
 	tokens_tree.item_activated.connect(_activate_tokens_tree)
 
+	var current_map = Game.player.map
+	var is_valid_map = current_map and current_map != 'None'
+	var map_id = current_map if is_valid_map else Game.campaign.maps.keys()[0]
+	
 	if Game.is_host:
-		var current_map = Game.player.map
-		var map_id = current_map if current_map and current_map != 'None' else Game.campaign.maps[0]
-		
-		Commands.enqueue(Commands.OpCode.SET_MAP, {
+		Commands.enqueue(Game.player_id, Commands.OpCode.SET_MAP, {
 			"id": map_id,
 		})
 	else:
-		Commands.send(Commands.OpCode.SEND_CAMPAIGN, {
-			"player_id": Game.player_id
-		})
+		Commands.async_send(Commands.OpCode.SEND_MAP, {
+			"id": map_id,
+		}, [
+			Game.master_id,
+		])
 
 #	test_commands()
 #	test_fried_commands()
@@ -196,7 +200,7 @@ func _on_forget_explored_button_pressed():
 	
 	
 func _on_save_exit_button_button_pressed():
-	Commands.enqueue(Commands.OpCode.SAVE_MAP)
+	Commands.enqueue(Game.player_id, Commands.OpCode.SAVE_MAP)
 	await Commands.empty_queue
 	Server.disconnected.emit()
 	
@@ -263,7 +267,7 @@ func _unhandled_input(event):
 func test_fried_commands():
 #	enqueue(Commands.OpCode.SAVE_MAP)
 	if Game.is_host:
-		Commands.enqueue(Commands.OpCode.SET_MAP, {
+		Commands.enqueue(Game.player_id, Commands.OpCode.SET_MAP, {
 			"file": "user://maps/0.json",
 		})
 #	enqueue(OpCode.NEW_LIGHT, {
@@ -275,14 +279,14 @@ func test_fried_commands():
 
 
 func test_commands():
-	Commands.enqueue(Commands.OpCode.MESSAGE, {
+	Commands.enqueue(Game.player_id, Commands.OpCode.MESSAGE, {
 		"message": "hello",
 	})
-	Commands.enqueue(Commands.OpCode.SET_MAP, {
+	Commands.enqueue(Game.player_id, Commands.OpCode.SET_MAP, {
 		"id": "0",
 		"donjon_file": "res://resources/maps/donjon/large_rooms.json",
 	})
-	Commands.enqueue(Commands.OpCode.NEW_ENTITY, {
+	Commands.enqueue(Game.player_id, Commands.OpCode.NEW_ENTITY, {
 		"id": "0",
 		"label": "0",
 		"texture_path": "res://resources/entity_textures/monsters/undead/undead_101.png",

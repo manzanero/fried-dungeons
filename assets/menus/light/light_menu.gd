@@ -47,7 +47,7 @@ func _on_delete_button_pressed():
 	queue_free()
 	light.get_parent().remove_child(light)
 	light.queue_free()
-	Commands.send(Commands.OpCode.DELETE_LIGHT, {
+	Commands.async_send(Commands.OpCode.DELETE_LIGHT, {
 		"id": str(light.name)
 	})
 	
@@ -74,7 +74,7 @@ func _on_apply_button_pressed():
 	light.name = id_edit.text
 	
 	if is_new_light:
-		Commands.send(Commands.OpCode.NEW_LIGHT, {
+		Commands.async_send(Commands.OpCode.NEW_LIGHT, {
 			"position": Utils.v3_to_array(light.position),
 			"id": str(light.name),
 			"intensity": light.intensity,
@@ -83,7 +83,7 @@ func _on_apply_button_pressed():
 			"follow": light.follow,
 		})
 	else:
-		Commands.send(Commands.OpCode.CHANGE_LIGHT, {
+		Commands.async_send(Commands.OpCode.CHANGE_LIGHT, {
 			"id": str(light.name),
 			"intensity": light.intensity,
 			"bright": light.bright,

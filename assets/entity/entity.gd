@@ -125,7 +125,7 @@ func validate_position(fallback_position := Vector3(0, 0, 0)):
 		cell.is_open = true
 		Game.world.map.set_cell(new_cell_position, cell)
 		Game.world.map.refresh_lights()
-		Commands.send(Commands.OpCode.SET_CELLS, {
+		await Commands.async_send(Commands.OpCode.SET_CELLS, {
 			"cells": [Game.world.map.serialize_cell(new_cell_position, cell)]
 		})
 
@@ -170,7 +170,7 @@ func _update():
 	
 	# calculate if entity has been moved
 	if position_changed:
-		Commands.send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
+		Commands.async_send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
 			"id": name,
 			"target_position": Utils.v3_to_array(position), 
 		})

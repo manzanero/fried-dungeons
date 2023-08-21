@@ -4,6 +4,7 @@ uniform float intensity : hint_range(0.0, 1.0, 0.001) = 1.0;
 
 void fragment() {
 	vec3 color = vec3(COLOR[0], COLOR[1], COLOR[2]) * intensity;
+	
 	if (is_in_view) {
 		color.rgb = mix(
 			pow(
@@ -14,6 +15,7 @@ void fragment() {
 			lessThan(color.rgb,vec3(0.04045))
 		);
 		ALBEDO = color;
+		
 	} else {
 		const mat3 Mat = mat3(
 			vec3(0.393, 0.769, 0.189),
