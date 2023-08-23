@@ -85,10 +85,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6, 0)
 mesh = SubResource("CylinderMesh_38mrw")
 skeleton = NodePath("../../..")
 
-[node name="Follower" type="RemoteTransform3D" parent="."]
-update_rotation = false
-update_scale = false
-
 [node name="UpdateTimer" type="Timer" parent="."]
 wait_time = 0.1
 autostart = true

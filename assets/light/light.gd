@@ -23,6 +23,8 @@ var follow : String = "" : set = _set_follow
 var cell_position : Vector3i
 var cells : Dictionary = {}
 var tick := 0.1
+var followed_position : Vector3
+var followed_entity : Entity
 var preview : bool
 
 var is_selected : bool : 
@@ -40,7 +42,6 @@ const DEFAULT_HEIGHT := 1.1
 @onready var body := %Body as MeshInstance3D
 @onready var collider := %Collider as StaticBody3D
 @onready var selector := %Selector as MeshInstance3D
-@onready var follower := $Follower as RemoteTransform3D
 @onready var update_timer := $UpdateTimer as Timer
 
 
@@ -51,6 +52,9 @@ func _ready():
 	update_timer.wait_time = tick
 	update_timer.autostart = true
 	update_timer.timeout.connect(_update)
+	
+	if followed_entity:
+		followed_position = followed_entity.position
 
 	cell_changed.connect(_on_cell_changed)
 	
@@ -68,11 +72,14 @@ func change(kwargs : Dictionary):
 
 func _set_follow(value : String):
 	follow = value
+	
+	if followed_entity:
+		followed_entity.light = null
+		followed_entity = null
+	
 	if value:
-		var entity : Entity = Game.world.map.entities_parent.get_node(value)
-		follower.remote_path = entity.get_path()
-	else:
-		follower.remote_path = NodePath("")
+		followed_entity = Game.world.map.entities_parent.get_node(value)
+		followed_entity.light = self
 	
 	pivot.position.y = DEFAULT_HEIGHT
 
@@ -97,7 +104,7 @@ func _update():
 
 	# calculate if selected
 	is_selected = Game.world.selected_light == self
-	
+
 	var new_cell_position = Utils.v3_to_v3i(position)
 	if new_cell_position != cell_position:
 		cell_position = new_cell_position

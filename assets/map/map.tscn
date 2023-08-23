@@ -23,3 +23,7 @@ metadata/_editor_floor_ = Vector3(0, 1, 0)
 [node name="Entities" type="Node3D" parent="."]
 
 [node name="Lights" type="Node3D" parent="."]
+
+[node name="UpdateTimer" type="Timer" parent="."]
+wait_time = 0.1
+autostart = true

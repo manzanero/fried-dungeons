@@ -57,9 +57,9 @@ class Campaign:
 			return ERR_CONNECTION_ERROR
 			
 		Game.campaign_label = group.description
-		var data = await Server.async_load_object("fried-dungeons-campaigns", Game.campaign_id)
+		var data = await Server.async_load_object("fried-dungeons-campaigns", Game.campaign_id, true)
 		if not data:
-			printerr('User "%s" not in group "%s"' % [Server.session.username, group.description])
+			printerr('Cannot find campaign "%s"' % [Game.campaign_id])
 			return ERR_CONNECTION_ERROR
 		
 		deserialize(data)
@@ -110,7 +110,11 @@ class Player:
 		}
 
 
-func has_entity_permissions(entity_id : String, permission_codes : Array[int]) -> bool:
+func has_entity_permission(entity_id : String, permission_code : EntityPermission) -> bool:
+	return has_entity_permissions(entity_id, [permission_code])
+
+
+func has_entity_permissions(entity_id : String, permission_codes : Array[EntityPermission]) -> bool:
 	if master_permission:
 		return true
 	

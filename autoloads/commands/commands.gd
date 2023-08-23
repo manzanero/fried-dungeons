@@ -76,7 +76,14 @@ func _command_set_map(command : Command):
 
 
 func _command_save_map(_command : Command):
-	await Server.async_save_object("fried-dungeons-maps", Game.world.map.id, Game.world.map.serialize())
+	if not is_instance_valid(Game.world.map):
+		print("Cannot save map")
+		return
+	
+	if Game.is_host:
+		await Server.async_save_object("fried-dungeons-maps", Game.world.map.id, Game.world.map.serialize())
+	else:
+		await Server.async_save_object("fried-dungeons-explored", Game.world.map.id, Game.world.map.serialize_explored())
 	map_saved.emit()
 
 
@@ -164,7 +171,7 @@ func _command_delete_light(command : Command):
 	
 func _command_set_light_position(command : Command):
 	var light : Light = Game.world.map.lights_parent.get_node(command.kwargs["id"])
-	light.position = Utils.v3_to_v3i(Utils.array_to_v3(command.kwargs["position"]))
+	light.position = Utils.array_to_v3(command.kwargs["position"])
 	
 	Game.world.map.update_fov()
 

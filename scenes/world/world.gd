@@ -50,8 +50,7 @@ func _ready():
 	commands_panel.visible = Game.is_host
 	player_name_tab.set_tab_title(0, Game.player_label)
 	
-#	if Game.is_host:
-#		save_timer.timeout.connect(enqueue.bind(OpCode.SAVE_MAP))
+	save_timer.timeout.connect(Commands.enqueue.bind(Game.player_id, Commands.OpCode.SAVE_MAP))
 	
 	pointer.is_pointing = false
 	
@@ -83,6 +82,7 @@ func _ready():
 	var is_valid_map = current_map and current_map != 'None'
 	var map_id = current_map if is_valid_map else Game.campaign.maps.keys()[0]
 	
+	Commands.queue.clear()
 	if Game.is_host:
 		Commands.enqueue(Game.player_id, Commands.OpCode.SET_MAP, {
 			"id": map_id,
@@ -139,7 +139,7 @@ func _update():
 	%MapValue.text = map.id if map else "None"
 	%SelectedCellValue.text = Utils.v3i_to_str(pointer.cell_position) if pointer.is_pointing else "None"
 	%HoveredCellValue.text = Utils.v3i_to_str(map.cell_hovered_position) if map and map.is_cell_hovered else "None"
-	%SelectedEntiyValue.text = selected_entity.id if selected_entity else "None"
+	%SelectedEntiyValue.text = selected_entity.id if is_instance_valid(selected_entity) else "None"
 	
 	# Server connection
 	if Commands.queue:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://tvgxpo8pyj5y"]
+[gd_scene load_steps=26 format=3 uid="uid://tvgxpo8pyj5y"]
 
 [ext_resource type="ArrayMesh" uid="uid://dokvt0u08buvd" path="res://resources/mesh_libraries/solids/dirt0.vox" id="1_ep5yb"]
 [ext_resource type="ArrayMesh" uid="uid://bq7s51tv57x38" path="res://resources/mesh_libraries/solids/stone0.vox" id="2_ogk0c"]
@@ -27,7 +27,19 @@ shader_parameter/intensity = 1.0
 [sub_resource type="BoxShape3D" id="BoxShape3D_r3jin"]
 resource_local_to_scene = true
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ljfed"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1um0p"]
+render_priority = 0
+shader = ExtResource("13_u0laj")
+shader_parameter/is_in_view = true
+shader_parameter/intensity = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3duy4"]
+render_priority = 0
+shader = ExtResource("13_u0laj")
+shader_parameter/is_in_view = true
+shader_parameter/intensity = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_btkvc"]
 render_priority = 0
 shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
@@ -39,10 +51,17 @@ shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
 shader_parameter/intensity = 1.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dmqc6"]
-transparency = 1
-vertex_color_use_as_albedo = true
-albedo_color = Color(1, 1, 1, 0.501961)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jtqyt"]
+render_priority = 0
+shader = ExtResource("13_u0laj")
+shader_parameter/is_in_view = true
+shader_parameter/intensity = 1.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kgu82"]
+render_priority = 0
+shader = ExtResource("13_u0laj")
+shader_parameter/is_in_view = true
+shader_parameter/intensity = 1.0
 
 [node name="Solids" type="Node3D"]
 
@@ -61,6 +80,7 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Stone0" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0384, 0.00641751, 0.022673)
 mesh = ExtResource("2_ogk0c")
+surface_material_override/0 = SubResource("ShaderMaterial_1um0p")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Stone0"]
 visible = false
@@ -72,6 +92,7 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Brick0" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.83606, 0, 0.243441)
 mesh = ExtResource("3_57oad")
+surface_material_override/0 = SubResource("ShaderMaterial_3duy4")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Brick0"]
 visible = false
@@ -106,7 +127,7 @@ shape = SubResource("BoxShape3D_r3jin")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.86678, 0, 1.96028)
 cast_shadow = 0
 mesh = ExtResource("6_ey34p")
-surface_material_override/0 = SubResource("ShaderMaterial_ljfed")
+surface_material_override/0 = SubResource("ShaderMaterial_btkvc")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Brick1"]
 visible = false
@@ -174,7 +195,7 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Glass0" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.3002, -4.76837e-07, 0.209027)
 mesh = ExtResource("12_ppaym")
-surface_material_override/0 = SubResource("StandardMaterial3D_dmqc6")
+surface_material_override/0 = SubResource("ShaderMaterial_jtqyt")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Glass0"]
 visible = false
@@ -197,6 +218,7 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Stone1" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.99358, 0, 1.6068)
 mesh = ExtResource("14_df6f5")
+surface_material_override/0 = SubResource("ShaderMaterial_kgu82")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Stone1"]
 visible = false

@@ -15,7 +15,7 @@ var auto_retry : bool = true
 var auto_retry_count : int = 3
 var auto_retry_backoff_base : int = 10
 # Whether or not to use threads when making HTTP requests.
-var use_threads : bool = true
+var use_threads : bool = false
 
 var _pending = {}
 var id : int = 0
@@ -74,11 +74,19 @@ class AsyncRequest:
 			result = HTTPRequest.RESULT_CANT_CONNECT
 			logger.debug("Request %d failed to start, error: %d" % [id, err])
 			return
-
+		
+#		request.request_completed.connect(_on_request_completed)
 		var args = await request.request_completed
 		result = args[0]
 		response_code = args[1]
 		response_body = args[3]
+		
+		
+#	func _on_request_completed(p_result, p_response_code, p_headers, p_body):
+#		result = p_result
+#		response_code = p_response_code
+#		response_body = p_body
+		
 
 	func backoff(p_time : int):
 		timer = request.get_tree().create_timer(p_time / 1000)
@@ -195,7 +203,13 @@ static func _send_async(p_id : int, p_pending : Dictionary):
 
 	var req : AsyncRequest = p_pending[p_id]
 	await req.make_request()
-
+	
+#	print("___________________")
+#	print(req.result)
+#	print(req.response_code)
+#	print(req.response_body)
+#	print("^^^^^^^^^^^^^^^^^^")
+	
 	while req.result != HTTPRequest.RESULT_SUCCESS:
 		req.logger.debug("Request %d failed with result: %d, response code: %d" % [
 			p_id, req.result, req.response_code

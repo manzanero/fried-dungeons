@@ -44,6 +44,8 @@ var is_selected : bool :
 		if selector.visible != value:
 			selector.visible = value
 
+var light : Light
+
 
 @onready var base := $Base as MeshInstance3D
 @onready var body := $Body as SpriteMeshInstance
@@ -76,6 +78,8 @@ func _ready():
 
 func _process(_delta):
 	label_control.position = Game.camera.camera.unproject_position(position)
+	if light:
+		light.position = position
 
 
 func _physics_process(delta):
@@ -164,22 +168,19 @@ func _update():
 		is_in_view = false
 		visible = false
 		label_control.visible = false
-		
-	if moving_to_target:
-		return
-	
-	# calculate if entity has been moved
-	if position_changed:
-		Commands.async_send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
-			"id": name,
-			"target_position": Utils.v3_to_array(position), 
-		})
-		position_changed = false
 	
 	var new_cell_position = Utils.v3_to_v3i(position)
 	if new_cell_position != cell_position:
 		cell_position = new_cell_position
 		cell_changed.emit()
+	
+	# calculate if entity has been moved
+	if position_changed and not moving_to_target:
+		Commands.async_send(Commands.OpCode.SET_ENTITY_TARGET_POSITION, {
+			"id": name,
+			"target_position": Utils.v3_to_array(position), 
+		})
+		position_changed = false
 
 
 func change(kwargs):

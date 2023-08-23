@@ -90,7 +90,7 @@ func get_new_cell():
 			cell.is_transparent = true
 			cell.orientation = Data.orientations.pick_random()
 		1:
-			cell.skin = map_theme.floor
+			cell.skin = map_theme.ground
 			cell.orientation = Data.orientations.pick_random()
 		2:
 			cell.skin = map_theme.wall

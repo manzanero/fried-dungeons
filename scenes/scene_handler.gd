@@ -34,7 +34,7 @@ func _ready():
 #	var voice_id = voices[0]
 #	DisplayServer.tts_speak("¿Ustedes piensan antes de hablar o hablan tras pensar?", voice_id)
 #	DisplayServer.tts_stop()
-	
+
 
 func start_player(is_mastrer, email, password): 
 	Game.is_host = is_mastrer
@@ -64,6 +64,7 @@ func start_player(is_mastrer, email, password):
 func leave_world():
 	if Game.world:
 		Game.world.queue_free()
+		current_scene.remove_child(Game.world)
 	
 	main_menu.visible = true
 

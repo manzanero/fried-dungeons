@@ -22,6 +22,7 @@ var max_y : int = 0
 var max_z : int = 0
 var ambient_light : int = 0
 var floors := {}
+var lights := {}
 var cells := {}
 var cells_explored := {}
 var cache_cells := {}
@@ -60,7 +61,9 @@ var cell_pointed : Cell :
 	get: 
 		return cells.get(cell_pointed_position)
 
+var tick := 0.1
 
+@onready var update_timer := $UpdateTimer as Timer
 @onready var library := $MapLibrary as MapLibrary
 @onready var solid_map := $SolidMap as GridMap
 @onready var entities_parent := $Entities as Node3D
@@ -72,6 +75,10 @@ var cell_pointed : Cell :
 
 
 func _ready():
+	update_timer.wait_time = tick
+	update_timer.autostart = true
+	update_timer.timeout.connect(_update)
+	
 	library.load_library()
 	solid_map.mesh_library = library.meshes
 	camera = Game.camera
@@ -83,7 +90,19 @@ func _physics_process(delta):
 	_process_entity_ray_hit()
 	_process_preview_entity_move(delta)
 	_process_preview_light_move(delta)
-		
+	
+
+func _update():
+	
+	# activate vision if player has permisions
+	if not Game.is_host and not entity_eyes:
+		for entity_id in Game.entity_permissions:
+			if Game.has_entity_permission(entity_id, Game.EntityPermission.GET_VISION):
+				if entities_parent.has_node(entity_id):
+					var entity : Entity = entities_parent.get_node(entity_id)
+					change_to_entity_eyes(entity)
+					break
+
 
 func get_cell_code(cell_position : Vector3i, cell : Cell, cell_light_intensity : int) -> int:
 		
@@ -132,25 +151,31 @@ func load_map(kwargs):
 	elif "donjon_file" in kwargs:
 		_load_donjon_json_file(kwargs["donjon_file"])
 	elif "id" in kwargs:
-		var map = await Server.async_load_object("fried-dungeons-maps", id)  
+		var explored = await Server.async_load_object("fried-dungeons-explored", id)  
+		if explored:
+			deserialize_explored(explored)
+		var map = await Server.async_load_object("fried-dungeons-maps", id, true)  
 		deserialize(map)
 		
 	if Game.is_host:
 		reset_cells(true)
-
+	else:
+		reset_cells(false)
+				
 
 func change_to_entity_eyes(entity):
-	if entity_eyes:
+	if is_instance_valid(entity_eyes):
 		entity_eyes.cell_changed.disconnect(update_fov)
 	
 	entity_eyes = entity
 	
-	if entity:
+	if is_instance_valid(entity):
 		reset_cells(false)
 		entity.cell_changed.connect(update_fov)
 		update_fov()
 	else:
-		reset_cells(true)
+		if Game.is_host:
+			reset_cells(true)
 
 
 func reset_cells(is_in_view):
@@ -183,7 +208,8 @@ func reset_explored():
 
 func update_fov():
 	if not entity_eyes:
-		reset_cells(true)
+		if Game.is_host:
+			reset_cells(true)
 		return
 	
 	var c_x := entity_eyes.cell_position.x
@@ -367,8 +393,9 @@ class Cell:
 
 	func get_light_intensity(cell_position : Vector3i) -> int:
 		var light_intensity = 0
+		
 		for light in lights:
-			light_intensity += light.get_intensity(cell_position)
+			light_intensity += light.get_intensity(cell_position) 
 			
 		var is_master_ambient_light_enabled := Game.is_host and not map.entity_eyes
 		var master_ambient_light := 20 if is_master_ambient_light_enabled else 0
@@ -406,7 +433,7 @@ func serialize_cell(cell_position : Vector3i, cell : Cell) -> Dictionary:
 func deserialize_cell(serialized_cell : Dictionary) -> Cell:
 	var cell = Cell.new(self)
 	var skin = serialized_cell.get("s")
-	cell.skin = solid_map.mesh_library.get_item_name(skin) if skin else ""
+	cell.skin = solid_map.mesh_library.get_item_name(skin) if skin != null else ""
 	cell.orientation = serialized_cell.get("o", 0)
 	cell.is_empty = bool(serialized_cell.get("e", 0))
 	cell.is_transparent = bool(serialized_cell.get("t", 0))
@@ -486,18 +513,14 @@ func serialize() -> Dictionary:
 	var serialized_entities = []
 	for entity in entities_parent.get_children():
 		serialized_entities.append(entity.serialize())
-		
-	var serialized_map = {
-		"id": id,
-		"label": label,
+
+	return {
 		"from": [min_x, min_y, min_z],
 		"to": [max_x, max_y, max_z],
 		"cells": serialized_cells,
 		"entities": serialized_entities,
 		"lights": serialized_lights,
 	}
-	
-	return serialized_map
 
 
 func deserialize(serialized_map : Dictionary):
@@ -515,12 +538,35 @@ func deserialize(serialized_map : Dictionary):
 		var cell_position = Vector3i(
 			serialized_cell["x"], 
 			serialized_cell["y"], 
-			serialized_cell["z"])
+			serialized_cell["z"],
+		)
 		var cell = deserialize_cell(serialized_cell)
 		set_cell(cell_position, cell)
+	
+	for serialized_entity in serialized_map.get('entities', {}):
+		Commands.enqueue(Game.player_id, Commands.OpCode.NEW_ENTITY, serialized_entity)
 	
 	for serialized_light in serialized_map.get('lights', {}):
 		Commands.enqueue(Game.player_id, Commands.OpCode.NEW_LIGHT, serialized_light)
 	
-	for serialized_entity in serialized_map.get('entities', {}):
-		Commands.enqueue(Game.player_id, Commands.OpCode.NEW_ENTITY, serialized_entity)
+
+func serialize_explored() -> Dictionary:
+	var serialized_cells = []
+	for cell_position in cells_explored:
+		var cell : Cell = cells_explored[cell_position]
+		serialized_cells.append(serialize_cell(cell_position, cell))
+	
+	return {
+		"cells_explored": serialized_cells,
+	}
+
+
+func deserialize_explored(serialized_explored : Dictionary):
+	for serialized_cell in serialized_explored.get('cells_explored', {}):
+		var cell_position = Vector3i(
+			serialized_cell["x"], 
+			serialized_cell["y"], 
+			serialized_cell["z"],
+		)
+		cells_explored[cell_position] = deserialize_cell(serialized_cell)
+	
