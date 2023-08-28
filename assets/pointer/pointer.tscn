@@ -5,7 +5,7 @@
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h8uvh"]
 shading_mode = 0
-vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
 albedo_color = Color(0.792157, 0.478431, 0.172549, 1)
 
 [node name="Pointer" type="Node3D"]

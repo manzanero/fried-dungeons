@@ -26,7 +26,7 @@ func _ready():
 	apply_button.pressed.connect(_on_apply_button_pressed)
 	delete_button.pressed.connect(_on_delete_button_pressed)
 	
-	$Panel/TabBar.gui_input.connect(_on_input)
+	%TabBar.gui_input.connect(_on_input)
 	
 	if light:
 		id_edit.text = str(light.name)

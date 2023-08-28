@@ -7,7 +7,7 @@ extends Node
 
 
 func load_library():
-	var meshes_len = 16
+	var meshes_len = 17
 	var meshes_len_10 = meshes_len
 	var meshes_len_9 = meshes_len * 2
 	var meshes_len_8 = meshes_len * 3

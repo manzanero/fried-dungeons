@@ -1,13 +1,12 @@
-[gd_scene load_steps=26 format=3 uid="uid://tvgxpo8pyj5y"]
+[gd_scene load_steps=25 format=3 uid="uid://tvgxpo8pyj5y"]
 
 [ext_resource type="ArrayMesh" uid="uid://dokvt0u08buvd" path="res://resources/mesh_libraries/solids/dirt0.vox" id="1_ep5yb"]
 [ext_resource type="ArrayMesh" uid="uid://bq7s51tv57x38" path="res://resources/mesh_libraries/solids/stone0.vox" id="2_ogk0c"]
-[ext_resource type="ArrayMesh" uid="uid://cxbe32ocxbnnl" path="res://resources/mesh_libraries/solids/brick0.vox" id="3_57oad"]
+[ext_resource type="ArrayMesh" path="res://resources/mesh_libraries/solids/brick0.vox" id="3_57oad"]
 [ext_resource type="ArrayMesh" uid="uid://eje7nvg63lin" path="res://resources/mesh_libraries/solids/grass0.vox" id="4_a38rc"]
 [ext_resource type="ArrayMesh" uid="uid://dm0q0ljycqj7q" path="res://resources/mesh_libraries/solids/log0.vox" id="5_1vorn"]
-[ext_resource type="ArrayMesh" uid="uid://b56dvqw6o10go" path="res://resources/mesh_libraries/solids/brick1.vox" id="6_ey34p"]
 [ext_resource type="ArrayMesh" uid="uid://dljb5y2d5e3wh" path="res://resources/mesh_libraries/solids/cover0.vox" id="7_5cwqr"]
-[ext_resource type="ArrayMesh" uid="uid://da5pc0d5wh2kp" path="res://resources/mesh_libraries/solids/brick2.vox" id="8_2mhou"]
+[ext_resource type="ArrayMesh" path="res://resources/mesh_libraries/solids/brick2.vox" id="8_2mhou"]
 [ext_resource type="ArrayMesh" uid="uid://cy7c1qvh3f32v" path="res://resources/mesh_libraries/solids/fill0.vox" id="9_0rres"]
 [ext_resource type="ArrayMesh" uid="uid://cvuqs0haaydjj" path="res://resources/mesh_libraries/solids/blueprint0.vox" id="10_bwx73"]
 [ext_resource type="ArrayMesh" uid="uid://cy5lgxgojh4lm" path="res://resources/mesh_libraries/solids/stained0.vox" id="11_l4os0"]
@@ -17,12 +16,15 @@
 [ext_resource type="ArrayMesh" uid="uid://cd55s7i24iroe" path="res://resources/mesh_libraries/solids/stone1.vox" id="14_df6f5"]
 [ext_resource type="ArrayMesh" uid="uid://bvdehh33kvbq1" path="res://resources/mesh_libraries/solids/door0.vox" id="15_1oc6x"]
 [ext_resource type="ArrayMesh" uid="uid://bdkqstuhwbybk" path="res://resources/mesh_libraries/solids/door1.vox" id="16_v2o1k"]
+[ext_resource type="ArrayMesh" uid="uid://ducvl5tkhr4lq" path="res://resources/mesh_libraries/solids/mansion0.vox" id="18_h4f7v"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lcni0"]
 render_priority = 0
 shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
-shader_parameter/intensity = 1.0
+shader_parameter/intensity = 0.4
+shader_parameter/focus_floor = true
+shader_parameter/focused_floor = 0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_r3jin"]
 resource_local_to_scene = true
@@ -32,36 +34,40 @@ render_priority = 0
 shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
 shader_parameter/intensity = 1.0
+shader_parameter/focus_floor = true
+shader_parameter/focused_floor = 0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_3duy4"]
 render_priority = 0
 shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
 shader_parameter/intensity = 1.0
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_btkvc"]
-render_priority = 0
-shader = ExtResource("13_u0laj")
-shader_parameter/is_in_view = true
-shader_parameter/intensity = 1.0
+shader_parameter/focus_floor = true
+shader_parameter/focused_floor = 0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w0ppg"]
 render_priority = 0
 shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
 shader_parameter/intensity = 1.0
+shader_parameter/focus_floor = true
+shader_parameter/focused_floor = 0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_jtqyt"]
 render_priority = 0
 shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
 shader_parameter/intensity = 1.0
+shader_parameter/focus_floor = true
+shader_parameter/focused_floor = 0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kgu82"]
 render_priority = 0
 shader = ExtResource("13_u0laj")
 shader_parameter/is_in_view = true
 shader_parameter/intensity = 1.0
+shader_parameter/focus_floor = true
+shader_parameter/focused_floor = 0
 
 [node name="Solids" type="Node3D"]
 
@@ -126,8 +132,6 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Brick1" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.86678, 0, 1.96028)
 cast_shadow = 0
-mesh = ExtResource("6_ey34p")
-surface_material_override/0 = SubResource("ShaderMaterial_btkvc")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="Brick1"]
 visible = false
@@ -230,7 +234,21 @@ shape = SubResource("BoxShape3D_r3jin")
 [node name="Door0" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4754, 0, 0.291426)
 mesh = ExtResource("15_1oc6x")
+surface_material_override/0 = SubResource("ShaderMaterial_lcni0")
 
 [node name="Door1" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.3099, -4.76837e-07, 1.82066)
 mesh = ExtResource("16_v2o1k")
+surface_material_override/0 = SubResource("ShaderMaterial_lcni0")
+
+[node name="Mansion0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0463, -4.76837e-07, 0.423393)
+mesh = ExtResource("18_h4f7v")
+surface_material_override/0 = SubResource("ShaderMaterial_lcni0")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Mansion0"]
+visible = false
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Mansion0/StaticBody3D"]
+shape = SubResource("BoxShape3D_r3jin")

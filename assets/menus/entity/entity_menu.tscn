@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://wur7a8tyi405"]
 
-[ext_resource type="Theme" uid="uid://wdhwb87x2roh" path="res://resources/themes/pixel_ui_theme/PixelTheme_sky.tres" id="1_kkuq5"]
+[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="1_3fkey"]
 [ext_resource type="Script" path="res://assets/menus/entity/entity_menu.gd" id="1_mesci"]
 [ext_resource type="Theme" uid="uid://dopunvp7uxup1" path="res://resources/themes/pixel_ui_theme/PixelTheme_blood.tres" id="3_3qgit"]
 
@@ -14,7 +14,7 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 4
-theme = ExtResource("1_kkuq5")
+theme = ExtResource("1_3fkey")
 script = ExtResource("1_mesci")
 
 [node name="Panel" type="Panel" parent="."]
@@ -25,271 +25,256 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -358.0
-offset_top = -174.5
-offset_right = 358.0
-offset_bottom = 174.5
+offset_top = -174.0
+offset_right = 308.0
+offset_bottom = 123.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="TabBar" type="TabBar" parent="Panel"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -40.0
-offset_right = 84.0
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer"]
+layout_mode = 2
+
+[node name="TabBar" type="TabBar" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(81.5, 0)
+layout_mode = 2
+size_flags_horizontal = 2
 tab_count = 1
 tab_0/title = "Entity"
 
-[node name="Entity" type="Label" parent="Panel"]
+[node name="IdLabel" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/HBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 1
+text = "ID:"
+vertical_alignment = 1
+
+[node name="IdEdit" type="LineEdit" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+text = "ABCDEFGH"
+editable = false
+
+[node name="Panel" type="Panel" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 5.0
-offset_top = 5.0
-offset_right = -5.0
-offset_bottom = -39.0
-text = "
-"
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="TokenTextureTree" type="Tree" parent="Panel/Entity"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 505.0
-offset_top = 3.0
-offset_right = 697.0
-offset_bottom = 292.0
-mouse_force_pass_scroll_events = false
-hide_root = true
-drop_mode_flags = 1
-scroll_horizontal_enabled = false
-
-[node name="GridContainer" type="VBoxContainer" parent="Panel/Entity"]
-layout_mode = 0
-offset_left = 7.0
-offset_top = 7.0
-offset_right = 491.0
-offset_bottom = 337.0
-mouse_filter = 2
-theme_override_constants/separation = 16
-
-[node name="Label" type="Label" parent="Panel/Entity/GridContainer"]
+[node name="GridContainer2" type="GridContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer"]
 layout_mode = 2
+columns = 2
+
+[node name="Label" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "Label:"
 
-[node name="LabelEdit" type="LineEdit" parent="Panel/Entity/GridContainer/Label"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 2
+
+[node name="LabelEdit" type="LineEdit" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-offset_left = 174.0
-offset_top = -4.0
-offset_right = 367.0
-offset_bottom = 30.0
+size_flags_horizontal = 3
 placeholder_text = "name..."
 
-[node name="LabelPublic" type="Label" parent="Panel/Entity/GridContainer/Label"]
-layout_mode = 0
-offset_left = 389.0
-offset_right = 455.0
-offset_bottom = 30.0
+[node name="LabelPublic" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer"]
+layout_mode = 2
 text = "public:"
 
-[node name="LabelPublicCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Label/LabelPublic"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 66.0
-offset_top = 2.0
-offset_right = 94.0
-offset_bottom = 30.0
-
-[node name="Health" type="Label" parent="Panel/Entity/GridContainer"]
-layout_mode = 2
-text = "Health:                    /"
-
-[node name="HelathEdit" type="SpinBox" parent="Panel/Entity/GridContainer/Health"]
+[node name="LabelPublicCheckBox" type="CheckBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-offset_left = 174.0
-offset_top = -4.0
-offset_right = 256.0
-offset_bottom = 30.0
+size_flags_horizontal = 8
+
+[node name="Health" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
+layout_mode = 2
+text = "Health:"
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HelathEdit" type="SpinBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 6
 min_value = -999.0
 max_value = 999.0
 value = 20.0
 
-[node name="HelathMaxEdit" type="SpinBox" parent="Panel/Entity/GridContainer/Health"]
+[node name="HealtPublic2" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer2"]
+layout_mode = 2
+text = "/"
+
+[node name="HelathMaxEdit" type="SpinBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
-offset_left = 295.0
-offset_top = -4.0
-offset_right = 377.0
-offset_bottom = 30.0
+size_flags_horizontal = 3
 min_value = 1.0
 max_value = 999.0
 value = 20.0
 
-[node name="HealtPublic" type="Label" parent="Panel/Entity/GridContainer/Health"]
-layout_mode = 0
-offset_left = 389.0
-offset_right = 455.0
-offset_bottom = 30.0
+[node name="HealtPublic" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer2"]
+layout_mode = 2
 text = "public:"
 
-[node name="HealtPublicCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Health/HealtPublic"]
+[node name="HealtPublicCheckBox" type="CheckBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer2"]
 unique_name_in_owner = true
-layout_mode = 0
-offset_left = 66.0
-offset_top = 2.0
-offset_right = 94.0
-offset_bottom = 30.0
+layout_mode = 2
+size_flags_horizontal = 8
 
-[node name="Base" type="Label" parent="Panel/Entity/GridContainer"]
+[node name="Base" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 visible = false
 layout_mode = 2
 text = "Base:"
 
-[node name="BaseCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Base"]
+[node name="BaseCheckBox" type="CheckBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
-offset_left = 174.0
-offset_right = 202.0
-offset_bottom = 24.0
+size_flags_horizontal = 0
 
-[node name="BaseSize" type="Label" parent="Panel/Entity/GridContainer"]
+[node name="BaseSize" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 layout_mode = 2
 text = "Base Size:"
 
-[node name="BaseSizeSpinBox" type="SpinBox" parent="Panel/Entity/GridContainer/BaseSize"]
+[node name="BaseSizeSpinBox" type="SpinBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
-offset_left = 174.0
-offset_top = -4.0
-offset_right = 256.0
-offset_bottom = 30.0
+size_flags_horizontal = 0
 min_value = 0.1
 max_value = 10.0
 step = 0.1
 value = 0.5
 custom_arrow_step = 0.1
 
-[node name="BaseColor" type="Label" parent="Panel/Entity/GridContainer"]
+[node name="BaseColor" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 layout_mode = 2
 text = "Base Color:"
 
-[node name="BaseColorColorPickerButton" type="ColorPickerButton" parent="Panel/Entity/GridContainer/BaseColor"]
+[node name="BaseColorColorPickerButton" type="ColorPickerButton" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(69.48, 0)
 layout_mode = 2
-offset_left = 168.0
-offset_top = -3.0
-offset_right = 320.0
-offset_bottom = 29.0
+size_flags_horizontal = 0
 flat = true
 color = Color(1, 1, 1, 1)
 
-[node name="Token" type="Label" parent="Panel/Entity/GridContainer"]
+[node name="Token" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 visible = false
 layout_mode = 2
 text = "Token:"
 
-[node name="TokenCheckBox" type="CheckBox" parent="Panel/Entity/GridContainer/Token"]
+[node name="TokenCheckBox" type="CheckBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="TokenTexture" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
+layout_mode = 2
+text = "Texture:"
+
+[node name="TokenTextureLabel" type="LineEdit" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
-offset_left = 174.0
-offset_right = 202.0
-offset_bottom = 29.0
-
-[node name="TokenTexture" type="Label" parent="Panel/Entity/GridContainer"]
-layout_mode = 2
-text = "Token Texture:"
-
-[node name="TokenTextureLabel" type="LineEdit" parent="Panel/Entity/GridContainer/TokenTexture"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 174.0
-offset_top = -3.5
-offset_right = 483.0
-offset_bottom = 30.5
 text = "None"
 editable = false
 
-[node name="TokenScale" type="Label" parent="Panel/Entity/GridContainer"]
+[node name="TokenScale" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 visible = false
 layout_mode = 2
 text = "Token Scale:"
 
-[node name="TokenScaleSpinBox" type="SpinBox" parent="Panel/Entity/GridContainer/TokenScale"]
+[node name="TokenScaleSpinBox" type="SpinBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 unique_name_in_owner = true
-layout_mode = 0
-offset_left = 174.0
-offset_top = -4.0
-offset_right = 256.0
-offset_bottom = 30.0
+visible = false
+layout_mode = 2
 min_value = 0.1
 max_value = 10.0
 step = 0.1
 value = 1.0
 custom_arrow_step = 0.1
 
-[node name="TokenTint" type="Label" parent="Panel/Entity/GridContainer"]
+[node name="TokenTint" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 visible = false
 layout_mode = 2
 text = "Token Tint:"
 
-[node name="TokenTintColorPickerButton" type="ColorPickerButton" parent="Panel/Entity/GridContainer/TokenTint"]
+[node name="TokenTintColorPickerButton" type="ColorPickerButton" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
-offset_left = 168.0
-offset_top = -3.0
-offset_right = 320.0
-offset_bottom = 29.0
 flat = true
 color = Color(1, 1, 1, 1)
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Panel/Entity"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer"]
 layout_mode = 2
-offset_left = 13.0
-offset_top = 303.0
-offset_right = 497.0
-offset_bottom = 337.0
-size_flags_vertical = 0
+size_flags_vertical = 8
 alignment = 1
 
-[node name="AcceptButton" type="Button" parent="Panel/Entity/HBoxContainer"]
+[node name="AcceptButton" type="Button" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 0
 text = "Accept"
 
-[node name="CancelButton" type="Button" parent="Panel/Entity/HBoxContainer"]
+[node name="CancelButton" type="Button" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 0
 text = "Cancel"
 
-[node name="ApplyButton" type="Button" parent="Panel/Entity/HBoxContainer"]
+[node name="ApplyButton" type="Button" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 0
 text = "Apply"
 
-[node name="IdLabel" type="Label" parent="Panel/Entity"]
-layout_mode = 0
-offset_left = 467.0
-offset_top = 307.0
-offset_right = 512.0
-offset_bottom = 336.0
-text = "ID: "
-
-[node name="IdEdit" type="LineEdit" parent="Panel/Entity/IdLabel"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 38.0
-offset_top = -4.0
-offset_right = 144.0
-offset_bottom = 30.0
-text = "ABCDEFGH"
-editable = false
-
-[node name="DeleteButton" type="Button" parent="Panel/Entity/IdLabel"]
+[node name="DeleteButton" type="Button" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
-offset_left = 148.0
-offset_top = -4.0
-offset_right = 230.0
-offset_bottom = 30.0
+size_flags_horizontal = 10
 theme = ExtResource("3_3qgit")
 text = "Delete"
+
+[node name="TokenTextureTree" type="Tree" parent="Panel/MarginContainer/HBoxContainer2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+hide_root = true
+drop_mode_flags = 1
+scroll_horizontal_enabled = false

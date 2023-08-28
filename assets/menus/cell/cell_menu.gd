@@ -10,11 +10,11 @@ var last_targeting_cell_position := Vector3i.UP * 1000
 var cells_rollback := {}
 var cells_rollout := {}
 
-@onready var floor_button := %FloorButton as Button
-@onready var wall_button := %WallButton as Button
-@onready var door_closed := %DoorClosedButton as Button
-@onready var door_open := %DoorOpenButton as Button
-@onready var empty_button := %EmptyButton as Button
+#@onready var floor_button := %FloorButton as Button
+#@onready var wall_button := %WallButton as Button
+#@onready var door_closed := %DoorClosedButton as Button
+#@onready var door_open := %DoorOpenButton as Button
+#@onready var empty_button := %EmptyButton as Button
 
 @onready var draw_wall_button := %CellWallButton as Button
 @onready var draw_floor_button := %CellFloorButton as Button
@@ -27,11 +27,11 @@ var cells_rollout := {}
 
 
 func _ready():
-	empty_button.pressed.connect(_on_empty_button_pressed)
-	floor_button.pressed.connect(_on_floor_button_pressed)
-	wall_button.pressed.connect(_on_wall_button_pressed)
-	door_closed.pressed.connect(_on_door_closed_button_pressed)
-	door_open.pressed.connect(_on_door_open_button_pressed)
+#	empty_button.pressed.connect(_on_empty_button_pressed)
+#	floor_button.pressed.connect(_on_floor_button_pressed)
+#	wall_button.pressed.connect(_on_wall_button_pressed)
+#	door_closed.pressed.connect(_on_door_closed_button_pressed)
+#	door_open.pressed.connect(_on_door_open_button_pressed)
 	
 	draw_wall_button.pressed.connect(_on_draw_wall_button_pressed)
 	draw_floor_button.pressed.connect(_on_draw_floor_button_pressed)
@@ -65,6 +65,7 @@ func _on_submit_button_button_pressed():
 		serialized_cells.append(Game.world.map.serialize_cell(cell_position, cell_rollout))
 		
 	visible = false
+	Game.world.grid.active = false
 	Game.world.map.refresh_lights()
 	Game.world.map.update_fov()
 		
@@ -78,6 +79,7 @@ func _on_cancel_button_button_pressed():
 		Game.world.map.set_cell(cell_position, cells_rollback[cell_position])
 		
 	visible = false
+	Game.world.grid.active = false
 	Game.world.map.refresh_lights()
 	Game.world.map.update_fov()
 

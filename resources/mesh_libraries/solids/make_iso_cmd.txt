@@ -1,0 +1,1 @@
+spotvox.exe mesh.vox -m 4 -r 1 --vertical-z 2.4 -e block

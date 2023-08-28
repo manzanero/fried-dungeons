@@ -1,0 +1,39 @@
+[gd_scene load_steps=7 format=3 uid="uid://cm3vo5ymaal1d"]
+
+[ext_resource type="Script" path="res://assets/pointer/grid.gd" id="1_t2qrv"]
+[ext_resource type="ArrayMesh" uid="uid://bupy38qqp2n4m" path="res://resources/meshes/grid1.obj" id="2_rnle8"]
+[ext_resource type="Shader" path="res://resources/meshes/grid.gdshader" id="3_6552o"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0y5ar"]
+render_priority = 0
+shader = ExtResource("3_6552o")
+shader_parameter/mouse_position = Vector3(0.5, 0.5, 0.5)
+shader_parameter/color = Color(0.94, 0.54, 0.15, 1)
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_4ikmk"]
+plane = Plane(0, 1, 0, 1)
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_44li0"]
+plane = Plane(0, -1, 0, -1)
+
+[node name="Grid" type="Node3D"]
+script = ExtResource("1_t2qrv")
+
+[node name="GridPivot" type="Marker3D" parent="."]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.05, 0.55)
+mesh = ExtResource("2_rnle8")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+collision_layer = 8
+collision_mask = 0
+
+[node name="Up" type="CollisionShape3D" parent="StaticBody3D"]
+unique_name_in_owner = true
+shape = SubResource("WorldBoundaryShape3D_4ikmk")
+
+[node name="Down" type="CollisionShape3D" parent="StaticBody3D"]
+unique_name_in_owner = true
+shape = SubResource("WorldBoundaryShape3D_44li0")

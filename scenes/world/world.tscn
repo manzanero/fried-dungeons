@@ -1,23 +1,18 @@
-[gd_scene load_steps=16 format=3 uid="uid://cfvnrqu5lwgj2"]
+[gd_scene load_steps=13 format=3 uid="uid://cfvnrqu5lwgj2"]
 
 [ext_resource type="Script" path="res://scenes/world/world.gd" id="1_lu7c3"]
 [ext_resource type="Script" path="res://assets/camera/camera.gd" id="2_hhmyh"]
-[ext_resource type="Theme" uid="uid://wdhwb87x2roh" path="res://resources/themes/pixel_ui_theme/PixelTheme_sky.tres" id="5_autet"]
+[ext_resource type="PackedScene" uid="uid://cm3vo5ymaal1d" path="res://assets/pointer/grid.tscn" id="3_ssmua"]
 [ext_resource type="PackedScene" uid="uid://cx2okcrb4o0n1" path="res://assets/pointer/pointer.tscn" id="5_hhb5x"]
 [ext_resource type="Environment" uid="uid://c5t856858r76b" path="res://scenes/world/world_environment.tres" id="5_i24rl"]
+[ext_resource type="Texture2D" uid="uid://b18bipndj3wqn" path="res://resources/mesh_libraries/solids/brick/1/icon.png" id="7_0ymwg"]
 [ext_resource type="Script" path="res://assets/menus/cell/cell_menu.gd" id="7_v2w22"]
 [ext_resource type="Theme" uid="uid://bbmp4uwlx25jx" path="res://resources/themes/pixel_ui_theme/PixelTheme_paper.tres" id="8_7jedo"]
+[ext_resource type="Texture2D" uid="uid://bif8bjxlsngrg" path="res://resources/mesh_libraries/solids/brick/0/icon.png" id="8_dq08g"]
 [ext_resource type="Theme" uid="uid://dopunvp7uxup1" path="res://resources/themes/pixel_ui_theme/PixelTheme_blood.tres" id="8_nqa4r"]
-[ext_resource type="Texture2D" uid="uid://18pnnvev02d2" path="res://resources/mesh_libraries/solids/stone1.png" id="9_l65hf"]
-[ext_resource type="Texture2D" uid="uid://b6i5tf3loohdd" path="res://resources/mesh_libraries/solids/brick1.png" id="10_sjk41"]
-[ext_resource type="Texture2D" uid="uid://bjbuefguikqlm" path="res://resources/mesh_libraries/solids/door0.png" id="11_sq6ei"]
-[ext_resource type="Texture2D" uid="uid://cgc4m8y3qnre6" path="res://resources/mesh_libraries/solids/door1.png" id="12_kylw6"]
+[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="8_q5ir4"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_x1uhu"]
-
-[sub_resource type="ButtonGroup" id="ButtonGroup_eu7s8"]
-
-[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_4ikmk"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_lu7c3")
@@ -33,9 +28,9 @@ max_zoom = 100.0
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot"]
 transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0, 0, 0)
+current = true
 fov = 30.0
 size = 20.0
-near = 0.09
 far = 1000.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
@@ -54,10 +49,13 @@ autostart = true
 wait_time = 10.25
 autostart = true
 
+[node name="Grid" parent="." instance=ExtResource("3_ssmua")]
+unique_name_in_owner = true
+
 [node name="HUDCanvas" type="CanvasLayer" parent="."]
 layer = 2
 
-[node name="HUD" type="Control" parent="HUDCanvas"]
+[node name="UI" type="Control" parent="HUDCanvas"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -65,16 +63,66 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme = ExtResource("5_autet")
+theme = ExtResource("8_q5ir4")
 
-[node name="Top" type="Control" parent="HUDCanvas/HUD"]
+[node name="HBoxContainer" type="HBoxContainer" parent="HUDCanvas/UI"]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+alignment = 1
 
-[node name="PlayerNameTab" type="TabBar" parent="HUDCanvas/HUD/Top"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer"]
+layout_mode = 2
+
+[node name="TokensPanel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(245.735, 107.37)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer/TokensPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer/TokensPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer/TokensPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+tab_count = 1
+tab_0/title = "Tokens"
+
+[node name="TokensTree" type="Tree" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer/TokensPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+mouse_force_pass_scroll_events = false
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="GameViewport" type="Control" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="PlayerNameTab" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/GameViewport"]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 5
@@ -88,53 +136,9 @@ tab_alignment = 1
 tab_count = 1
 tab_0/title = "Master"
 
-[node name="Left" type="Control" parent="HUDCanvas/HUD"]
-layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-grow_vertical = 2
-theme = ExtResource("5_autet")
-
-[node name="TokensPanel" type="Panel" parent="HUDCanvas/HUD/Left"]
+[node name="Middle" type="Control" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/GameViewport"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 5.0
-offset_top = -207.0
-offset_right = 210.0
-offset_bottom = 207.0
-grow_vertical = 2
-
-[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/Left/TokensPanel"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -40.0
-offset_right = 50.0
-tab_count = 1
-tab_0/title = "Tokens"
-
-[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/Left/TokensPanel"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
-
-[node name="TokensTree" type="Tree" parent="HUDCanvas/HUD/Left/TokensPanel/MarginContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-mouse_force_pass_scroll_events = false
-
-[node name="Midde" type="Control" parent="HUDCanvas/HUD"]
+z_index = 1
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -143,468 +147,377 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-theme = ExtResource("5_autet")
 
-[node name="Bot" type="Control" parent="HUDCanvas/HUD"]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 0
-size_flags_horizontal = 0
-size_flags_vertical = 4
-theme = ExtResource("5_autet")
-
-[node name="CellEditPanel" type="Panel" parent="HUDCanvas/HUD/Bot"]
+[node name="CellEditPanel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -330.0
-offset_top = -96.0
-offset_right = 330.0
-offset_bottom = -6.0
-grow_horizontal = 2
-grow_vertical = 0
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
 script = ExtResource("7_v2w22")
 
-[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/Bot/CellEditPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 8
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="Control" type="Control" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer"]
-custom_minimum_size = Vector2(247.59, 0)
+[node name="HBoxContainer" type="HBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer"]
 layout_mode = 2
-size_flags_horizontal = 8
+theme_override_constants/separation = 10
 
-[node name="Control" type="Control" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control"]
-layout_mode = 1
-anchors_preset = 9
-anchor_bottom = 1.0
-offset_right = 80.0
-grow_vertical = 2
+[node name="VBoxContainer2" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 2
 
-[node name="CellWallButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control/Control"]
+[node name="CellWallButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer2"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_bottom = -40.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 4
+layout_mode = 2
 toggle_mode = true
 button_pressed = true
 button_group = SubResource("ButtonGroup_x1uhu")
-text = "Wall"
+text = "Above"
 
-[node name="CellFloorButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control/Control"]
+[node name="CellFloorButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer2"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 40.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 4
+layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_x1uhu")
-text = "Floor"
+text = "Bellow
+"
 
-[node name="CellSubmitButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+mouse_force_pass_scroll_events = false
+drag_to_rearrange_enabled = true
+tab_count = 4
+tab_0/title = "Brick"
+tab_1/title = "Dirt"
+tab_2/title = "fdsgfd"
+tab_3/title = "rfge"
+
+[node name="ItemList" type="ItemList" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+auto_height = true
+item_count = 2
+max_columns = 0
+fixed_column_width = 80
+item_0/text = ""
+item_0/icon = ExtResource("8_dq08g")
+item_1/text = ""
+item_1/icon = ExtResource("7_0ymwg")
+
+[node name="VBoxContainer3" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 2
+
+[node name="CellSubmitButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer3"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 13
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -38.205
-offset_right = 41.795
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 8
+layout_mode = 2
 theme = ExtResource("8_7jedo")
 text = "Submit"
 
-[node name="CellCancelButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control"]
+[node name="CellCancelButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer3"]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 11
-anchor_left = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -76.0
-grow_horizontal = 0
-grow_vertical = 2
-size_flags_horizontal = 8
+layout_mode = 2
 theme = ExtResource("8_nqa4r")
 text = "Cancel"
 
-[node name="Control2" type="Control" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer"]
+[node name="ConsolePanel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2"]
+custom_minimum_size = Vector2(0, 160)
 layout_mode = 2
-size_flags_horizontal = 0
 
-[node name="HFlowContainer" type="HFlowContainer" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control2"]
-layout_mode = 2
-offset_right = 396.0
-offset_bottom = 75.0
-
-[node name="EmptyButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control2/HFlowContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 75)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-toggle_mode = true
-button_pressed = true
-button_group = SubResource("ButtonGroup_eu7s8")
-icon_alignment = 1
-expand_icon = true
-
-[node name="FloorButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control2/HFlowContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 75)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-toggle_mode = true
-button_group = SubResource("ButtonGroup_eu7s8")
-icon = ExtResource("9_l65hf")
-icon_alignment = 1
-expand_icon = true
-
-[node name="WallButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control2/HFlowContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 75)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-toggle_mode = true
-button_group = SubResource("ButtonGroup_eu7s8")
-icon = ExtResource("10_sjk41")
-icon_alignment = 1
-expand_icon = true
-
-[node name="DoorClosedButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control2/HFlowContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 75)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-toggle_mode = true
-button_group = SubResource("ButtonGroup_eu7s8")
-icon = ExtResource("11_sq6ei")
-icon_alignment = 1
-expand_icon = true
-
-[node name="DoorOpenButton" type="Button" parent="HUDCanvas/HUD/Bot/CellEditPanel/MarginContainer/Control2/HFlowContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(75, 75)
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-toggle_mode = true
-button_group = SubResource("ButtonGroup_eu7s8")
-icon = ExtResource("12_kylw6")
-icon_alignment = 1
-expand_icon = true
-
-[node name="BotRight" type="Control" parent="HUDCanvas/HUD"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 0
-grow_vertical = 0
-
-[node name="GridContainer" type="GridContainer" parent="HUDCanvas/HUD/BotRight"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -262.0
-offset_top = -109.0
-offset_right = -16.0
-offset_bottom = -14.0
-grow_horizontal = 0
-grow_vertical = 0
-columns = 2
-
-[node name="Map" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-layout_mode = 2
-text = "Map:"
-
-[node name="MapValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "MAP000"
-
-[node name="SelectedCell" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-layout_mode = 2
-text = "Selected Cell:"
-
-[node name="SelectedCellValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "(0, 0, 0)"
-
-[node name="HoveredCell" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-layout_mode = 2
-text = "Hovered Cell:"
-
-[node name="HoveredCellValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "(0, 0, 0)"
-
-[node name="SelectedEntiy" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-layout_mode = 2
-text = "Selected Entity:"
-
-[node name="SelectedEntiyValue" type="Label" parent="HUDCanvas/HUD/BotRight/GridContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "ENT000"
-
-[node name="Right" type="Control" parent="HUDCanvas/HUD"]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-grow_horizontal = 0
-grow_vertical = 2
-size_flags_horizontal = 0
-size_flags_vertical = 4
-theme = ExtResource("5_autet")
-
-[node name="CommandsPanel" type="Panel" parent="HUDCanvas/HUD/Right"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -210.0
-offset_top = -60.0
-offset_right = -5.0
-offset_bottom = 161.0
-grow_horizontal = 0
-grow_vertical = 2
-
-[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/Right/CommandsPanel"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -40.0
-offset_right = 127.0
-tab_count = 1
-tab_0/title = "Commands"
-
-[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/Right/CommandsPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+tab_count = 1
+tab_0/title = "Console"
+
+[node name="CodeEdit" type="TextEdit" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel/MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel/MarginContainer/HBoxContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="ClearButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel/MarginContainer/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+text = "Clear"
+
+[node name="CloseButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/ConsolePanel/MarginContainer/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+theme = ExtResource("8_nqa4r")
+text = "Close"
+
+[node name="VBoxContainer3" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
-[node name="NewEntity" type="Button" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer/VBoxContainer"]
+[node name="CommandsPanel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+tab_count = 1
+tab_0/title = "Commands"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NewEntity" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "New Entity +"
 alignment = 0
 
-[node name="NewLight" type="Button" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer/VBoxContainer"]
+[node name="NewLight" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "New Light +"
 alignment = 0
 
-[node name="TotalVision" type="Button" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer/VBoxContainer"]
+[node name="TotalVision" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Total Vision"
 alignment = 0
 
-[node name="ForgetExplored" type="Button" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer/VBoxContainer"]
+[node name="ForgetExplored" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Forget Explored"
 alignment = 0
 
-[node name="SaveExit" type="Button" parent="HUDCanvas/HUD/Right/CommandsPanel/MarginContainer"]
+[node name="SaveExit" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 8
+size_flags_vertical = 10
 theme = ExtResource("8_nqa4r")
 text = "Save & Exit"
 alignment = 0
 
-[node name="CellContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
+[node name="GridContainer" type="GridContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 8
+columns = 2
+
+[node name="Map" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "Map:"
+
+[node name="MapValue" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
 unique_name_in_owner = true
-visible = false
-layout_mode = 0
-offset_right = 112.0
-offset_bottom = 42.0
+layout_mode = 2
+text = "MAP000"
 
-[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/CellContextualMenu"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -40.0
-offset_right = 42.0
-tab_count = 1
-tab_0/title = "Cell"
+[node name="SelectedCell" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "Selected Cell:"
 
-[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/CellContextualMenu"]
+[node name="SelectedCellValue" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "(0, 0, 0)"
+
+[node name="HoveredCell" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "Hovered Cell:"
+
+[node name="HoveredCellValue" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "(0, 0, 0)"
+
+[node name="SelectedEntiy" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
+layout_mode = 2
+text = "Selected Entity:"
+
+[node name="SelectedEntiyValue" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/GridContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "ENT000"
+
+[node name="Contextual" type="Control" parent="HUDCanvas/UI"]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CellContextualMenu" type="Panel" parent="HUDCanvas/UI/Contextual"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 177.0
+offset_top = -103.0
+offset_right = 289.0
+offset_bottom = -11.0
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/Contextual/CellContextualMenu"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer"]
 layout_mode = 2
+size_flags_vertical = 0
 
-[node name="CellEditButton" type="Button" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer/VBoxContainer"]
+[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer/VBoxContainer"]
+layout_mode = 2
+tab_count = 1
+tab_0/title = "Cell"
+
+[node name="CellEditButton" type="Button" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Edit
 "
 
-[node name="InfoButton" type="Button" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer/VBoxContainer"]
+[node name="InfoButton" type="Button" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer/VBoxContainer"]
 visible = false
 layout_mode = 2
 text = "Info
 
 "
 
-[node name="ActionsButton" type="Button" parent="HUDCanvas/HUD/CellContextualMenu/MarginContainer/VBoxContainer"]
+[node name="ActionsButton" type="Button" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer/VBoxContainer"]
 visible = false
 layout_mode = 2
 text = "Actions"
 
-[node name="LightContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
+[node name="LightContextualMenu" type="Panel" parent="HUDCanvas/UI/Contextual"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 112.0
-offset_bottom = 42.0
+offset_left = 217.0
+offset_top = -230.0
+offset_right = 329.0
+offset_bottom = -138.0
 
-[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/LightContextualMenu"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -40.0
-offset_right = 74.0
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/Contextual/LightContextualMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/Contextual/LightContextualMenu/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/Contextual/LightContextualMenu/MarginContainer/VBoxContainer"]
+layout_mode = 2
 tab_count = 1
 tab_0/title = "Light"
 
-[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/LightContextualMenu"]
+[node name="LightEditButton" type="Button" parent="HUDCanvas/UI/Contextual/LightContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Edit
+"
+
+[node name="EntityContextualMenu" type="Panel" parent="HUDCanvas/UI/Contextual"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 357.0
+offset_top = -147.0
+offset_right = 469.0
+offset_bottom = -17.0
+
+[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/Contextual/EntityContextualMenu"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/LightContextualMenu/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer"]
 layout_mode = 2
+size_flags_vertical = 0
 
-[node name="LightEditButton" type="Button" parent="HUDCanvas/HUD/LightContextualMenu/MarginContainer/VBoxContainer"]
-unique_name_in_owner = true
+[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "Edit
-"
-
-[node name="EntityContextualMenu" type="Panel" parent="HUDCanvas/HUD"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 0
-offset_right = 112.0
-offset_bottom = 80.0
-
-[node name="TabBar" type="TabBar" parent="HUDCanvas/HUD/EntityContextualMenu"]
-layout_mode = 0
-offset_left = 2.0
-offset_top = -40.0
-offset_right = 42.0
 tab_count = 1
 tab_0/title = "Entity"
 
-[node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/HUD/EntityContextualMenu"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 4
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 4
-theme_override_constants/margin_bottom = 4
-
-[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer"]
-layout_mode = 2
-
-[node name="EntityEditButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+[node name="EntityEditButton" type="Button" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Edit
 "
 
-[node name="EntityInfoButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+[node name="EntityInfoButton" type="Button" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
 visible = false
 layout_mode = 2
 text = "Info
 
 "
 
-[node name="EntityVisionButton" type="Button" parent="HUDCanvas/HUD/EntityContextualMenu/MarginContainer/VBoxContainer"]
+[node name="EntityVisionButton" type="Button" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Vision"
-
-[node name="GroundCollider" type="StaticBody3D" parent="."]
-collision_layer = 8
-collision_mask = 0
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundCollider"]
-shape = SubResource("WorldBoundaryShape3D_4ikmk")

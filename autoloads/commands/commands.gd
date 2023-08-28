@@ -77,13 +77,13 @@ func _command_set_map(command : Command):
 
 func _command_save_map(_command : Command):
 	if not is_instance_valid(Game.world.map):
-		print("Cannot save map")
+		printerr("Cannot save map")
 		return
 	
 	if Game.is_host:
-		await Server.async_save_object("fried-dungeons-maps", Game.world.map.id, Game.world.map.serialize())
+		Server.async_save_object("fried-dungeons-maps", Game.world.map.id, Game.world.map.serialize())
 	else:
-		await Server.async_save_object("fried-dungeons-explored", Game.world.map.id, Game.world.map.serialize_explored())
+		Server.async_save_object("fried-dungeons-explored", Game.world.map.id, Game.world.map.serialize_explored())
 	map_saved.emit()
 
 

@@ -6,7 +6,6 @@ signal changed
 var light_scene = preload("res://assets/light/light.tscn")
 var entity_scene = preload("res://assets/entity/entity.tscn")
 
-
 var id : String : 
 	get:
 		return str(name)
@@ -20,8 +19,9 @@ var min_z : int = 0
 var max_x : int = 0
 var max_y : int = 0
 var max_z : int = 0
-var ambient_light : int = 0
+var grids := {}
 var floors := {}
+var ambient_light : int = 0
 var lights := {}
 var cells := {}
 var cells_explored := {}
@@ -65,7 +65,7 @@ var tick := 0.1
 
 @onready var update_timer := $UpdateTimer as Timer
 @onready var library := $MapLibrary as MapLibrary
-@onready var solid_map := $SolidMap as GridMap
+@onready var grid_parent := $Grids
 @onready var entities_parent := $Entities as Node3D
 @onready var lights_parent := $Lights as Node3D
 @onready var map_theme := MapTheme.new()
@@ -80,7 +80,7 @@ func _ready():
 	update_timer.timeout.connect(_update)
 	
 	library.load_library()
-	solid_map.mesh_library = library.meshes
+	
 	camera = Game.camera
 	
 	
@@ -108,44 +108,52 @@ func get_cell_code(cell_position : Vector3i, cell : Cell, cell_light_intensity :
 		
 	# buil mode
 	if cell.is_preview:
-		return solid_map.mesh_library.find_item_by_name(cell.skin)
+		return library.meshes.find_item_by_name(cell.skin)
 	
 	if cell.is_in_view and cell_light_intensity:
 		var light_str = str(snappedi(cell_light_intensity - 10, 20))
-		return solid_map.mesh_library.find_item_by_name(light_str + cell.skin)
+		return library.meshes.find_item_by_name(light_str + cell.skin)
 
 	var cell_explored = cells_explored.get(cell_position)
 	if cell_explored and Game.is_high_end:
-		return solid_map.mesh_library.find_item_by_name('x' + cell_explored.skin)
+		return library.meshes.find_item_by_name('x' + cell_explored.skin)
 
 	return -1
 
 
 func set_cell(cell_position : Vector3i, cell : Cell):
 	cells[cell_position] = cell
-	
+
+	if not cell:
+		grids[cell_position.y].set_cell_item(cell_position, -1)
+		if cell_position.y == 0:
+			floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), true)
+		return
+		
 	var cell_light_intensity = 0
 	if cell.is_in_view:
 		cell_light_intensity = cell.get_light_intensity(cell_position)
 		
 		if cell_light_intensity >= 20:
 			cells_explored[cell_position] = cell
-
-	if cell:
-		solid_map.set_cell_item(cell_position, get_cell_code(cell_position, cell, cell_light_intensity), cell.orientation)
-		if cell_position.y == 0:
-			floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), cell.is_transparent)
-	else:
-		solid_map.set_cell_item(cell_position, -1)
-		if cell_position.y == 0:
-			floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), true)
+	
+	grids[cell_position.y].set_cell_item(cell_position, get_cell_code(cell_position, cell, cell_light_intensity), cell.orientation)
+		
+	if cell_position.y == 0:
+		floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), cell.is_transparent)
 
 
 func load_map(kwargs):
-	solid_map.clear()
-	
+	for grid in grid_parent.get_children():
+		grid.queue_free()
+	for entity in entities_parent.get_children():
+		entity.queue_free()
+	for light in lights_parent.get_children():
+		light.queue_free()
+		
 	id = kwargs["id"]
 	label = Game.campaign.maps[id]["label"]
+	
 	if "file" in kwargs:
 		_load_fried_json_file(kwargs["file"])
 	elif "donjon_file" in kwargs:
@@ -245,18 +253,8 @@ func update_fov():
 				set_cell(cell_position, cell)
 
 
-func _get_hit_info(raycast : PhysicsRayQueryParameters3D, collision_mask : int):
-	var ray_length = 1000
-	var mouse_pos = get_viewport().get_mouse_position()
-	var space_state = get_world_3d().direct_space_state
-	raycast.from = camera.camera.project_ray_origin(mouse_pos)
-	raycast.to = raycast.from + camera.camera.project_ray_normal(mouse_pos) * ray_length
-	raycast.collision_mask = collision_mask
-	return space_state.intersect_ray(raycast)
-
-
 func _process_cell_ray_hit():
-	var hit_info = _get_hit_info(cell_raycast, Utils.get_bitmask(1))
+	var hit_info = Utils.get_raycast_hit(self, Game.camera.camera, cell_raycast, Utils.get_bitmask(1))
 	if hit_info:
 		is_cell_hovered = true
 		position_hovered = hit_info["position"] 
@@ -266,7 +264,7 @@ func _process_cell_ray_hit():
 
 
 func _process_entity_ray_hit():
-	var hit_info = _get_hit_info(cell_raycast, Utils.get_bitmask(2))
+	var hit_info = Utils.get_raycast_hit(self, Game.camera.camera, entity_raycast, Utils.get_bitmask(2))
 	if hit_info:
 		entity_hovered = hit_info["collider"]
 	else:
@@ -274,7 +272,7 @@ func _process_entity_ray_hit():
 
 
 func _process_light_ray_hit():
-	var hit_info = _get_hit_info(light_raycast, Utils.get_bitmask(3))
+	var hit_info = Utils.get_raycast_hit(self, Game.camera.camera, light_raycast, Utils.get_bitmask(3))
 	if hit_info:
 		light_hovered = hit_info["collider"].get_parent().get_parent()
 	else:
@@ -372,16 +370,19 @@ class MapTheme:
 
 class Cell:
 	var map : Map
+	
 	var skin : String
-	var donjon_code : int
 	var orientation : int
 	var emission : int
-	var is_empty : bool
 	var is_transparent : bool
+	var is_empty : bool
+	var is_ceiling : bool
+	
 	var is_door : bool
 	var is_open : bool
 	var is_locked : bool
 	
+	var donjon_code : int
 	var is_preview : bool
 	var is_in_view : bool
 	var lights : Array[Light] = []
@@ -392,12 +393,12 @@ class Cell:
 
 
 	func get_light_intensity(cell_position : Vector3i) -> int:
-		var light_intensity = 0
+		var light_intensity : float = 0
 		
 		for light in lights:
 			light_intensity += light.get_intensity(cell_position) 
 			
-		var is_master_ambient_light_enabled := Game.is_host and not map.entity_eyes
+		var is_master_ambient_light_enabled := Game.is_host and not is_instance_valid(map.entity_eyes)
 		var master_ambient_light := 20 if is_master_ambient_light_enabled else 0
 		return clamp(max(map.ambient_light, emission, light_intensity), master_ambient_light, 100)
 	
@@ -414,13 +415,17 @@ func serialize_cell(cell_position : Vector3i, cell : Cell) -> Dictionary:
 	serialized_cell["y"] = cell_position.y
 	serialized_cell["z"] = cell_position.z
 	if cell.skin:
-		serialized_cell["s"] = solid_map.mesh_library.find_item_by_name(cell.skin) 
+		serialized_cell["s"] = grids[cell_position.y].mesh_library.find_item_by_name(cell.skin) 
 	if cell.orientation:
 		serialized_cell["o"] = cell.orientation
-	if cell.is_empty:
-		serialized_cell["e"] = 1
+	if cell.emission:
+		serialized_cell["l"] = cell.emission
 	if cell.is_transparent:
 		serialized_cell["t"] = 1
+	if cell.is_empty:
+		serialized_cell["e"] = 1
+	if cell.is_ceiling:
+		serialized_cell["c"] = 1
 	if cell.is_door:
 		serialized_cell["door"] = 1
 	if cell.is_open:
@@ -433,10 +438,12 @@ func serialize_cell(cell_position : Vector3i, cell : Cell) -> Dictionary:
 func deserialize_cell(serialized_cell : Dictionary) -> Cell:
 	var cell = Cell.new(self)
 	var skin = serialized_cell.get("s")
-	cell.skin = solid_map.mesh_library.get_item_name(skin) if skin != null else ""
+	cell.skin = library.meshes.get_item_name(skin) if skin != null else ""
 	cell.orientation = serialized_cell.get("o", 0)
-	cell.is_empty = bool(serialized_cell.get("e", 0))
+	cell.emission = serialized_cell.get("l", 0)
 	cell.is_transparent = bool(serialized_cell.get("t", 0))
+	cell.is_empty = bool(serialized_cell.get("e", 0))
+	cell.is_ceiling = bool(serialized_cell.get("c", 0))
 	cell.is_door = bool(serialized_cell.get("door", 0))
 	cell.is_open = bool(serialized_cell.get("open", 0))
 	cell.is_locked = bool(serialized_cell.get("locked", 0))
@@ -531,7 +538,11 @@ func deserialize(serialized_map : Dictionary):
 	max_y = serialized_map['to'][1]
 	max_z = serialized_map['to'][2]
 	
-	for y in range(min_y + 1, max_y):
+	for y in range(min_y, max_y):
+		grids[y] = GridMap.new()
+		grids[y].mesh_library = library.meshes
+		grids[y].cell_size = Vector3.ONE
+		grid_parent.add_child(grids[y])
 		floors[y] = MRPAS.new(Vector2(max_x - min_x, max_z - min_z ))
 	
 	for serialized_cell in serialized_map.get('cells', {}):

@@ -16,7 +16,9 @@ func _ready():
 	%TouchButton.pressed.connect(touch_demo_world.bind())
 	
 	Game.is_high_end = "Windows" == Utils.get_os_name()
-	Server.message.connect(Commands.enqueue)
+	
+	if not Server.message.is_connected(Commands.enqueue):  # prints error when F5
+		Server.message.connect(Commands.enqueue)
 	Server.disconnected.connect(leave_world)
 	
 	# show fps

@@ -116,8 +116,21 @@ func async_send_room_message(op_code : Commands.OpCode, kwargs : Dictionary, pla
 
 
 func async_save_object(collection : String, key : String, data) -> Error:
+	var json = Utils.dumps_json(data)
 	var acks : NakamaAPI.ApiStorageObjectAcks = await client.write_storage_objects_async(session, [
-		NakamaWriteStorageObject.new(collection, key, 2, 1, Utils.dumps_json(data), "")
+		NakamaWriteStorageObject.new(collection, key, 2, 1, json, "")
+	])
+
+	if acks.exception:
+		printerr(acks.exception)
+		return ERR_CONNECTION_ERROR
+
+	return OK
+
+
+func async_delete_object(collection : String, key : String) -> Error:
+	var acks := await client.delete_storage_objects_async(session, [
+		NakamaStorageObjectId.new(collection, key, session.user_id, "")
 	])
 	
 	if acks.exception:
@@ -130,7 +143,6 @@ func async_save_object(collection : String, key : String, data) -> Error:
 func async_load_object(collection : String, key : String, from_master : bool = false):
 	var values := await async_load_objects(collection, [key], from_master)
 	if not values:
-		printerr("Object %s does not exist" % key)
 		return
 		
 	return values[0]

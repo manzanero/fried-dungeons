@@ -30,7 +30,8 @@ var selected_entity : Entity
 
 @onready var cell_contextual_menu := %CellContextualMenu as Panel
 @onready var cell_edit_button := %CellEditButton as Button
-@onready var cell_edit_panel := %CellEditPanel as Panel
+@onready var cell_edit_panel := %CellEditPanel
+@onready var grid := %Grid
 
 @onready var light_contextual_menu := %LightContextualMenu as Panel
 @onready var light_edit_button := %LightEditButton as Button
@@ -38,6 +39,7 @@ var selected_entity : Entity
 @onready var entity_contextual_menu := %EntityContextualMenu as Panel
 @onready var entity_edit_button := %EntityEditButton as Button
 @onready var entity_vision_button := %EntityVisionButton as Button
+
 @onready var map : Map = null
 
 
@@ -53,6 +55,7 @@ func _ready():
 	save_timer.timeout.connect(Commands.enqueue.bind(Game.player_id, Commands.OpCode.SAVE_MAP))
 	
 	pointer.is_pointing = false
+	grid.active = false 
 	
 	update_timer.wait_time = tick
 	update_timer.autostart = true
@@ -79,7 +82,7 @@ func _ready():
 	tokens_tree.item_activated.connect(_activate_tokens_tree)
 
 	var current_map = Game.player.map
-	var is_valid_map = current_map and current_map != 'None'
+	var is_valid_map = current_map and current_map != 'None' and current_map in Game.campaign.maps.keys()
 	var map_id = current_map if is_valid_map else Game.campaign.maps.keys()[0]
 	
 	Commands.queue.clear()
@@ -133,7 +136,15 @@ func _activate_tokens_tree():
 	_select_tokens_tree()
 	entity_contextual_menu.position = get_viewport().get_mouse_position()
 	entity_contextual_menu.visible = true
+	
+	
+func _on_show_ceiling_button_toggled(pressed : bool):
+	Game.world.map.ceiling_map.visible = pressed
+	
 
+func _on_show_ground_button_toggled(pressed : bool):
+	Game.world.map.ground_map.visible = pressed
+	
 
 func _update():
 	%MapValue.text = map.id if map else "None"
@@ -155,19 +166,20 @@ func _on_cell_edit_button_pressed():
 	cell_edit_panel.cells_rollout.clear()
 	cell_edit_panel.visible = true
 	cell_contextual_menu.visible = false
+	grid.active = true
 
 
 func _on_light_edit_button_pressed():
 	var light_menu = light_menu_scene.instantiate()
 	light_menu.use_light(selected_light)
-	$HUDCanvas/HUD/Midde.add_child(light_menu)
+	%Middle.add_child(light_menu)
 	light_contextual_menu.visible = false
 
 
 func _on_entity_edit_button_pressed():
 	var entity_menu = entity_menu_scene.instantiate()
 	entity_menu.use_entity(selected_entity)
-	$HUDCanvas/HUD/Midde.add_child(entity_menu)
+	%Middle.add_child(entity_menu)
 	entity_contextual_menu.visible = false
 
 
@@ -179,14 +191,14 @@ func _on_entity_vision_button_pressed():
 		
 func _on_new_entity_button_pressed():
 	var entity_menu = entity_menu_scene.instantiate()
-	$HUDCanvas/HUD/Midde.add_child(entity_menu)
+	%Middle.add_child(entity_menu)
 	entity_menu.id_edit.text = UUID.short()
 	entity_menu.position = Vector2(0, -entity_menu.size.y / 2)
 
 		
 func _on_new_light_button_pressed():
 	var light_menu = light_menu_scene.instantiate()
-	$HUDCanvas/HUD/Midde.add_child(light_menu)
+	%Middle.add_child(light_menu)
 	light_menu.id_edit.text = UUID.short()
 	light_menu.position = Vector2(0, -light_menu.size.y / 2)
 	
@@ -214,6 +226,8 @@ func _unhandled_input(event):
 		
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.is_pressed():
+				
+				print("unhandled world click")
 				
 				cell_contextual_menu.visible = false
 				light_contextual_menu.visible = false

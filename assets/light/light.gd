@@ -89,13 +89,13 @@ func _set_color(value : Color):
 	body.mesh.surface_get_material(0).albedo_color = value
 
 
-func get_intensity(target_position : Vector3) -> float:
-	var d : float = ((target_position - position) * Vector3(1, 0, 1)).length()
-	if d <= bright:
+func get_intensity(target_position : Vector3i) -> float:
+	var d : float = ((target_position - cell_position) * Vector3i(1, 0, 1)).length()
+	if d < bright:
 		return intensity
-	if d >= faint:
+	if d > faint:
 		return 0
-	return  (1 - (d - bright) / (faint - bright)) * intensity
+	return (1 - (d - bright) / (faint - bright)) * intensity
 	
 
 func _update():
