@@ -1,7 +1,8 @@
+class_name CellEditMenu
 extends Panel
 
-var floor_index : int = 0
-var cell_model : int = 0
+var build_dir := Vector3.UP
+var cell_data : = {}
 var is_targeting_cell_position := false
 var is_building := false
 var target_cell_position := Vector3i.ZERO
@@ -10,14 +11,11 @@ var last_targeting_cell_position := Vector3i.UP * 1000
 var cells_rollback := {}
 var cells_rollout := {}
 
-#@onready var floor_button := %FloorButton as Button
-#@onready var wall_button := %WallButton as Button
-#@onready var door_closed := %DoorClosedButton as Button
-#@onready var door_open := %DoorOpenButton as Button
-#@onready var empty_button := %EmptyButton as Button
-
 @onready var draw_wall_button := %CellWallButton as Button
 @onready var draw_floor_button := %CellFloorButton as Button
+
+@onready var category_tapbar := %CategoryTabBar as TabBar
+@onready var category_itemlist := %CategoryItemList as ItemList
 
 @onready var submit_button := %CellSubmitButton as Button
 @onready var cancel_button := %CellCancelButton as Button
@@ -27,33 +25,29 @@ var cells_rollout := {}
 
 
 func _ready():
-#	empty_button.pressed.connect(_on_empty_button_pressed)
-#	floor_button.pressed.connect(_on_floor_button_pressed)
-#	wall_button.pressed.connect(_on_wall_button_pressed)
-#	door_closed.pressed.connect(_on_door_closed_button_pressed)
-#	door_open.pressed.connect(_on_door_open_button_pressed)
-	
 	draw_wall_button.pressed.connect(_on_draw_wall_button_pressed)
 	draw_floor_button.pressed.connect(_on_draw_floor_button_pressed)
-	
+	category_itemlist.item_selected.connect(_on_item_selected)
+	category_itemlist.empty_clicked.connect(_on_empty_clicked)
 	submit_button.pressed.connect(_on_submit_button_button_pressed)
 	cancel_button.pressed.connect(_on_cancel_button_button_pressed)
 
 
-func _on_empty_button_pressed():
-	cell_model = 0
-func _on_floor_button_pressed():
-	cell_model = 1
-func _on_wall_button_pressed():
-	cell_model = 2
-func _on_door_closed_button_pressed():
-	cell_model = 3
-func _on_door_open_button_pressed():
-	cell_model = 4
 func _on_draw_wall_button_pressed():
-	floor_index = 0
+	build_dir = Vector3.UP
+	
+	
 func _on_draw_floor_button_pressed():
-	floor_index = -1
+	build_dir = Vector3.DOWN
+
+
+func _on_item_selected(index):
+	cell_data = category_itemlist.get_item_metadata(index)
+
+
+func _on_empty_clicked(_at_position, _mouse_button_index):
+	category_itemlist.deselect_all()
+	cell_data = {}
 
 
 func _on_submit_button_button_pressed():
@@ -86,42 +80,31 @@ func _on_cancel_button_button_pressed():
 
 func get_new_cell():
 	var cell = Map.Cell.new(Game.world.map)
-	match cell_model:
-		0:
-			cell.is_empty = true
-			cell.is_transparent = true
-			cell.orientation = Data.orientations.pick_random()
-		1:
-			cell.skin = map_theme.ground
-			cell.orientation = Data.orientations.pick_random()
-		2:
-			cell.skin = map_theme.wall
-			cell.orientation = Data.yp_orientations.pick_random()
-		3:
-			cell.skin = map_theme.door_closed
-			cell.orientation = Data.yp_orientations[0]
-			cell.is_door = true
-		4:
-			cell.skin = map_theme.door_open
-			cell.orientation = Data.yp_orientations[0]
-			cell.is_door = true
-			cell.is_open = true
-			
 	cell.is_preview = true
+	
+	if not cell_data:
+		cell.is_empty = true
+		cell.is_transparent = true
+		return cell
+	
+	cell.skin = cell_data["skin"]
+	cell.orientation = Data.yp_orientations.pick_random()
+	
+	if "is_door" in cell_data:
+		cell.is_door = cell_data["is_door"]
+	
+	if "is_open" in cell_data:
+		cell.is_empty = true
+		cell.is_open = cell_data["is_open"]
+
 	return cell
 
 
 func _process_target_ray_hit():
-	var ray_length = 1000
-	var mouse_pos = get_viewport().get_mouse_position()
-	var space_state = Game.world.get_world_3d().direct_space_state
-	target_raycast.from = Game.camera.camera.project_ray_origin(mouse_pos)
-	target_raycast.to = target_raycast.from + Game.camera.camera.project_ray_normal(mouse_pos) * ray_length
-	target_raycast.collision_mask = Utils.get_bitmask(4)
-	var hit_info = space_state.intersect_ray(target_raycast)
+	var hit_info = Utils.get_raycast_hit(Game.world, Game.camera.eyes, target_raycast, Utils.get_bitmask(4))
 	if hit_info:
 		is_targeting_cell_position = true
-		target_cell_position = Utils.v3_to_v3i(hit_info["position"] + Vector3.UP * (floor_index + 0.1) )
+		target_cell_position = Utils.v3_to_v3i(hit_info["position"] + build_dir * 0.1)
 	else:
 		is_targeting_cell_position = false
 
@@ -143,11 +126,15 @@ func _process(_delta):
 		
 		# door case
 		if cell_rollout.is_door:
-			var next_cell = cells_rollout.get(target_cell_position + Vector3i(0, 0, -1), 
+			var up_cell = cells_rollout.get(target_cell_position + Vector3i(0, 0, -1), 
 					Game.world.map.cells.get(target_cell_position + Vector3i(0, 0, -1)))
+			var left_cell = cells_rollout.get(target_cell_position + Vector3i(-1, 0, 0), 
+					Game.world.map.cells.get(target_cell_position + Vector3i(-1, 0, 0)))
 				
-			if next_cell and next_cell.is_empty:
+			if up_cell and up_cell.is_empty:
 				cell_rollout.orientation = Data.yp_orientations[1]
+			elif left_cell and left_cell.is_empty:
+				cell_rollout.orientation = Data.yp_orientations[0]
 		
 		Game.world.map.set_cell(target_cell_position, cell_rollout)
 		cells_rollout[target_cell_position] = cell_rollout
@@ -166,3 +153,5 @@ func _input(event):
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				is_building = false
 				last_targeting_cell_position = Vector3i.UP * 1000
+			
+#				print(cells_rollout)

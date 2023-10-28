@@ -1,0 +1,35 @@
+[gd_scene load_steps=6 format=3 uid="uid://b452jgi0mcx0c"]
+
+[ext_resource type="Script" path="res://scenes/test/test.gd" id="1_j5vim"]
+[ext_resource type="ArrayMesh" uid="uid://br4y426xvk566" path="res://resources/mesh_libraries/solids/brick/0/mesh.vox" id="2_m3t7g"]
+
+[sub_resource type="MeshLibrary" id="MeshLibrary_lydur"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ab2wi"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_peyp8"]
+albedo_color = Color(0, 0.203922, 0.00784314, 1)
+
+[node name="Test" type="Node"]
+script = ExtResource("1_j5vim")
+
+[node name="Node3D" type="Node3D" parent="."]
+
+[node name="GridMap" type="GridMap" parent="Node3D"]
+mesh_library = SubResource("MeshLibrary_lydur")
+cell_size = Vector3(1, 1, 1)
+
+[node name="Camera3D" type="Camera3D" parent="Node3D"]
+transform = Transform3D(0.815128, -0.221681, 0.535186, 0, 0.92388, 0.382683, -0.579281, -0.311936, 0.75308, 1.58729, 1.62399, 3.20331)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.699606, 0.420486, 1.64435)
+mesh = SubResource("BoxMesh_ab2wi")
+surface_material_override/0 = SubResource("StandardMaterial3D_peyp8")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Node3D"]
+transform = Transform3D(0.859585, -0.439014, 0.261497, 0, 0.511743, 0.859139, -0.510993, -0.738503, 0.439887, 0.474534, 2.38419e-07, 2.08849)
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.53069, 0, -0.435128)
+mesh = ExtResource("2_m3t7g")

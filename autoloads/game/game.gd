@@ -90,12 +90,14 @@ class Campaign:
 		
 
 class Player:
+	var label : String
 	var master_permission: bool
 	var entity_permissions : Dictionary
 	var map : String
 
 
 	func deserialize(data) -> Player:
+		label = data.get('label', 'Noname')
 		master_permission = data.get('master_permission', false)
 		entity_permissions = data.get('entity_permissions', {})
 		map = data.get('map', 'None')
@@ -104,6 +106,7 @@ class Player:
 		
 	func serialize():
 		return {
+			"label": label,
 			"master_permission": master_permission,
 			"entity_permissions": entity_permissions,
 			"map": map,

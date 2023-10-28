@@ -38,7 +38,7 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/initial_position_type=2
 window/size/initial_screen=1
-window/stretch/aspect="keep_height"
+window/stretch/aspect="ignore"
 
 [editor_plugins]
 
@@ -106,10 +106,15 @@ locale/translations=PackedStringArray("res://localization/translations.en.transl
 
 textures/canvas_textures/default_texture_filter=3
 renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 global_illumination/gi/use_half_resolution=true
-shading/overrides/force_vertex_shading=true
-shading/overrides/force_lambert_over_burley=true
+shading/overrides/force_vertex_shading.mobile=false
+shading/overrides/force_lambert_over_burley.mobile=false
+textures/default_filters/use_nearest_mipmap_filter=true
+textures/default_filters/anisotropic_filtering_level=0
+camera/depth_of_field/depth_of_field_bokeh_shape=0
+camera/depth_of_field/depth_of_field_bokeh_quality=0
 anti_aliasing/screen_space_roughness_limiter/enabled=false
 occlusion_culling/use_occlusion_culling=true
 

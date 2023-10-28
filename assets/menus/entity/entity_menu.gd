@@ -1,8 +1,9 @@
+class_name EntityMenu
 extends Control
 
 
 var entity : Entity
-
+var is_new_entity : bool
 
 @onready var accept_button := %AcceptButton as Button
 @onready var cancel_button := %CancelButton as Button
@@ -24,8 +25,10 @@ var entity : Entity
 @onready var token_scale_spin := %TokenScaleSpinBox as SpinBox
 @onready var token_tint_picker := %TokenTintColorPickerButton as ColorPickerButton
 
-func use_entity(p_entity):
+
+func use_entity(p_entity, p_is_new_entity=false):
 	entity = p_entity
+	is_new_entity = p_is_new_entity
 
 
 func _ready():
@@ -37,27 +40,23 @@ func _ready():
 	
 	%TabBar.gui_input.connect(_on_input)
 	
-	if entity:
-		id_edit.text = str(entity.name)
-		label_edit.text = entity.label
-		label_public_check.button_pressed = entity.label_known
-		health_edit.value = entity.health
-		health_max_edit.value = entity.health_max
-		health_public_check.button_pressed = entity.health_known
-		base_check.button_pressed = true
-		base_size_spin.value = entity.base_size
-		base_color_picker.color = entity.base_color
-		token_check.button_pressed = true
-		token_scale_spin.value = 1
-		token_tint_picker.color = Color.WHITE
-		
-		if entity.texture_path == "None":
-			populate_texture_tree("None")
-		else:
-			populate_texture_tree(entity.texture_path.split("res://resources/entity_textures/")[1])
+	id_edit.text = str(entity.name)
+	label_edit.text = entity.label
+	label_public_check.button_pressed = entity.label_known
+	health_edit.value = entity.health
+	health_max_edit.value = entity.health_max
+	health_public_check.button_pressed = entity.health_known
+	base_check.button_pressed = true
+	base_size_spin.value = entity.base_size
+	base_color_picker.color = entity.base_color
+	token_check.button_pressed = true
+	token_scale_spin.value = 1
+	token_tint_picker.color = Color.WHITE
+	
+	if entity.texture == "None":
+		populate_texture_tree("None")
 	else:
-		id_edit.text = UUID.short()
-		populate_texture_tree()
+		populate_texture_tree(entity.texture)
 
 
 func populate_texture_tree(selection : String = "None"):
@@ -80,17 +79,19 @@ func populate_texture_tree(selection : String = "None"):
 			sub_cat_child.collapsed = selection == "None" or selection.split("/")[1] != sub_cat
 			sub_cat_child.set_selectable(0, false)
 			
-			for texture in DirAccess.get_files_at("res://resources/entity_textures/" + cat + "/" + sub_cat):
-				if texture.contains(".png.import"):
-					if FileAccess.file_exists("res://resources/entity_textures/" + cat + "/" + sub_cat + "/" + texture.split(".import")[0]):  # when export, .png goes to png.im
-						texture = texture.split(".import")[0]
+			for basename in DirAccess.get_files_at("res://resources/entity_textures/" + cat + "/" + sub_cat):
+				if basename.contains(".png.import"):
+					var icon_path = "res://resources/entity_textures/" + cat + "/" + sub_cat + "/" + basename
+					if FileAccess.file_exists(icon_path.split(".import")[0]):  # when export, .png goes to png.im
+						basename = basename.split(".import")[0]
 						
 					var texture_child = token_texture_tree.create_item(sub_cat_child)
-					var texture_basename = texture.split(".png")[0]
+					var texture_basename = basename.split(".png")[0]
 					texture_child.set_text(0, texture_basename)
 					texture_child.set_tooltip_text(0, " ")
+					texture_child.set_icon(0, load(icon_path.split(".import")[0]))
 
-					if selection != "None" and selection.split("/")[2] == texture:
+					if selection != "None" and selection.split("/")[2] + ".png" == basename:
 						texture_child.select(0)
 						token_texture_tree.scroll_to_item(texture_child)
 						
@@ -123,51 +124,49 @@ func _on_delete_button_pressed():
 	queue_free()
 	entity.get_parent().remove_child(entity)
 	entity.queue_free()
-	Commands.async_send(Commands.OpCode.DELETE_ENTITY, {
-		"id": str(entity.name)
-	})
+	
+	if not is_new_entity:
+		Commands.async_send(Commands.OpCode.DELETE_ENTITY, {
+			"id": str(entity.name)
+		})
 
 	Game.world.populate_tokens_tree()
+	
+	Game.world.map.update_fov()
+
 
 func _on_cancel_button_pressed():
+	if is_new_entity:
+		entity.get_parent().remove_child(entity)
+		entity.queue_free()
+		
 	queue_free()
 
 
 func _on_apply_button_pressed():
-	var is_new_entity = false	
-	if not entity:
-		is_new_entity = true
-		entity = Game.entity_scene.instantiate()
-		Game.world.map.entities_parent.add_child(entity)
-		entity.position = Game.world.pointer.position + Vector3(0.5, 1, 0.5)
-
-	entity.label = label_edit.text
-	entity.label_known = label_public_check.button_pressed
-	entity.health = health_edit.value
-	entity.health_max = health_max_edit.value
-	entity.health_known = health_public_check.button_pressed
-#	base_check.button_pressed = true
-	entity.base_size = base_size_spin.value
-	entity.base_color = base_color_picker.color
-#	token_check.button_pressed = true
-#	token_scale_spin.value = 1
-#	token_tint_picker.color = Color.WHITE
 	entity.name = id_edit.text
-	if token_texture_label.text == "None":
-		entity.texture_path = "None"
-	else:
-		entity.texture_path = "res://resources/entity_textures/" + token_texture_label.text + ".png"
+	
+	entity.change({
+		"label": label_edit.text,
+		"label_known": label_public_check.button_pressed,
+		"texture": token_texture_label.text,
+		"base_color": base_color_picker.color,
+		"base_size": base_size_spin.value,
+		"health": health_edit.value,
+		"health_max": health_max_edit.value,
+		"health_known": health_public_check.button_pressed,
+	})
 	
 	if is_new_entity:
 		Commands.async_send(Commands.OpCode.NEW_ENTITY, {
-			"id": str(entity.name),
+			"id": entity.id,
 			"position": Utils.v3_to_array(entity.position),
 			"label": entity.label,
 			"health": entity.health,
 			"health_max": entity.health_max,
 			"base_size": entity.base_size,
 			"base_color": Utils.color_to_string(entity.base_color),
-			"texture_path": entity.texture_path,
+			"texture": entity.texture,
 		})
 	else:
 		Commands.async_send(Commands.OpCode.CHANGE_ENTITY, {
@@ -177,7 +176,7 @@ func _on_apply_button_pressed():
 			"health_max": entity.health_max,
 			"base_size": entity.base_size,
 			"base_color": Utils.color_to_string(entity.base_color),
-			"texture_path": entity.texture_path,
+			"texture": entity.texture,
 		})
 	
 	Game.world.populate_tokens_tree()

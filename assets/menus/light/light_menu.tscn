@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://b32xjh5pdkuru"]
 
-[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="1_q380l"]
+[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="1_h6cr2"]
 [ext_resource type="Script" path="res://assets/menus/light/light_menu.gd" id="2_kipmi"]
 [ext_resource type="Theme" uid="uid://dopunvp7uxup1" path="res://resources/themes/pixel_ui_theme/PixelTheme_blood.tres" id="3_1x86m"]
 
@@ -14,7 +14,7 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 4
-theme = ExtResource("1_q380l")
+theme = ExtResource("1_h6cr2")
 script = ExtResource("2_kipmi")
 
 [node name="Panel" type="Panel" parent="."]

@@ -29,6 +29,7 @@ var cache_cells := {}
 var entity_eyes : Entity
 
 var camera : Camera
+
 var entity_hovered : Entity
 var preview_entity_move_mode : bool
 var entity_moving : Entity
@@ -60,14 +61,17 @@ var cell_pointed_position : Vector3i :
 var cell_pointed : Cell : 
 	get: 
 		return cells.get(cell_pointed_position)
+		
+var floor_hovered : Vector3
 
 var tick := 0.1
 
 @onready var update_timer := $UpdateTimer as Timer
-@onready var library := $MapLibrary as MapLibrary
 @onready var grid_parent := $Grids
 @onready var entities_parent := $Entities as Node3D
 @onready var lights_parent := $Lights as Node3D
+@onready var mesh_library : MeshLibrary
+@onready var mesh_library_50 : MeshLibrary
 @onready var map_theme := MapTheme.new()
 @onready var cell_raycast := PhysicsRayQueryParameters3D.new()
 @onready var entity_raycast := PhysicsRayQueryParameters3D.new()
@@ -78,16 +82,19 @@ func _ready():
 	update_timer.wait_time = tick
 	update_timer.autostart = true
 	update_timer.timeout.connect(_update)
-	
-	library.load_library()
-	
+	Game.world.floor_level_changed.connect(_on_floor_level_changed)
+	Game.world.eyes_changed.connect(_on_eyes_changed)
+		
 	camera = Game.camera
-	
-	
+	mesh_library = Game.world.map_library.meshes
+	mesh_library_50 = Game.world.map_library.meshes_50
+
+
 func _physics_process(delta):
 	_process_cell_ray_hit()
 	_process_light_ray_hit()
 	_process_entity_ray_hit()
+	_process_floor_ray_hit()
 	_process_preview_entity_move(delta)
 	_process_preview_light_move(delta)
 	
@@ -100,23 +107,46 @@ func _update():
 			if Game.has_entity_permission(entity_id, Game.EntityPermission.GET_VISION):
 				if entities_parent.has_node(entity_id):
 					var entity : Entity = entities_parent.get_node(entity_id)
-					change_to_entity_eyes(entity)
+					change_to_entity_vision(entity)
 					break
+					
 
+func _on_floor_level_changed(new_level : int):
+	print("Current floor level: %s" % [new_level])
+	
+	for i in grids:
+		var grid := get_or_create_grid(i) as GridMap
+
+		if new_level in [i, i + 1]:
+			grid.visible = true
+			grid.collision_layer = Utils.get_bitmask(1)
+		else:
+			grid.visible = false
+			grid.collision_layer = 0
+	
+	Game.camera.floor_level = new_level
+	Game.world.grid.floor_level = new_level
+					
+
+func _on_eyes_changed():
+	for i in grids:
+		var grid := get_or_create_grid(i) as GridMap
+		grid.visible = true
+		
 
 func get_cell_code(cell_position : Vector3i, cell : Cell, cell_light_intensity : int) -> int:
-		
+	
 	# buil mode
 	if cell.is_preview:
-		return library.meshes.find_item_by_name(cell.skin)
+		return mesh_library.find_item_by_name(cell.skin)
 	
-	if cell.is_in_view and cell_light_intensity:
-		var light_str = str(snappedi(cell_light_intensity - 10, 20))
-		return library.meshes.find_item_by_name(light_str + cell.skin)
+	if cell.is_in_view and cell_light_intensity >= 20:
+		var light_str = str(snappedi(cell_light_intensity - 10, MapLibrary.SHADES_STEP))  # -10 bc i need step floor
+		return mesh_library.find_item_by_name(light_str + cell.skin)
 
 	var cell_explored = cells_explored.get(cell_position)
 	if cell_explored and Game.is_high_end:
-		return library.meshes.find_item_by_name('x' + cell_explored.skin)
+		return mesh_library.find_item_by_name('x' + cell_explored.skin)
 
 	return -1
 
@@ -125,9 +155,8 @@ func set_cell(cell_position : Vector3i, cell : Cell):
 	cells[cell_position] = cell
 
 	if not cell:
-		grids[cell_position.y].set_cell_item(cell_position, -1)
-		if cell_position.y == 0:
-			floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), true)
+		get_or_create_grid(cell_position.y).set_cell_item(cell_position, -1)
+		floors[cell_position.y].set_transparent(Vector2i(cell_position.x, cell_position.z), true)
 		return
 		
 	var cell_light_intensity = 0
@@ -137,13 +166,29 @@ func set_cell(cell_position : Vector3i, cell : Cell):
 		if cell_light_intensity >= 20:
 			cells_explored[cell_position] = cell
 	
-	grids[cell_position.y].set_cell_item(cell_position, get_cell_code(cell_position, cell, cell_light_intensity), cell.orientation)
+	get_or_create_grid(cell_position.y).set_cell_item(cell_position, get_cell_code(cell_position, cell, cell_light_intensity), cell.orientation)
 		
-	if cell_position.y == 0:
-		floors[0].set_transparent(Vector2i(cell_position.x, cell_position.z), cell.is_transparent)
+	floors[cell_position.y].set_transparent(Vector2i(cell_position.x, cell_position.z), cell.is_transparent)
+	
+
+func get_or_create_grid(floor_level : int) -> GridMap:
+	if floor_level in grids:
+		return grids[floor_level]
+		
+	var grid := GridMap.new()
+	grid.mesh_library = mesh_library
+	grid.cell_size = Vector3.ONE
+	grid.cell_octant_size = 1
+	grids[floor_level] = grid
+	grid_parent.add_child(grid)
+	if floor_level < min_y:
+		min_y = floor_level
+	if floor_level > max_y:
+		max_y = floor_level
+	return grid
 
 
-func load_map(kwargs):
+func set_map(kwargs : Dictionary):
 	for grid in grid_parent.get_children():
 		grid.queue_free()
 	for entity in entities_parent.get_children():
@@ -169,9 +214,9 @@ func load_map(kwargs):
 		reset_cells(true)
 	else:
 		reset_cells(false)
-				
 
-func change_to_entity_eyes(entity):
+
+func change_to_entity_vision(entity : Entity):
 	if is_instance_valid(entity_eyes):
 		entity_eyes.cell_changed.disconnect(update_fov)
 	
@@ -187,9 +232,10 @@ func change_to_entity_eyes(entity):
 
 
 func reset_cells(is_in_view):
-	for y in range(min_y, max_y):
-		for x in range(min_x, max_x):
-			for z in range(min_z, max_z):
+	print("Reseting cells from %s to %s to %s" % [[min_x, min_y, min_z], [max_x, max_y, max_z], "view" if is_in_view else "not view"])
+	for y in range(min_y, max_y + 1):
+		for x in range(min_x, max_x + 1):
+			for z in range(min_z, max_z + 1):
 				var cell_position = Vector3i(x, y, z)
 				var cell = cells.get(cell_position)
 				if cell:
@@ -205,9 +251,9 @@ func refresh_lights():
 func reset_explored():
 	cells_explored.clear()
 	
-	for y in range(min_y, max_y):
-		for x in range(min_x, max_x):
-			for z in range(min_z, max_z):
+	for y in range(min_y, max_y + 1):
+		for x in range(min_x, max_x + 1):
+			for z in range(min_z, max_z + 1):
 				var cell_position = Vector3i(x, y, z)
 				var cell = cells.get(cell_position)
 				if cell:
@@ -219,6 +265,8 @@ func update_fov():
 		if Game.is_host:
 			reset_cells(true)
 		return
+		
+	#reset_cells(false)
 	
 	var c_x := entity_eyes.cell_position.x
 	var c_y := entity_eyes.cell_position.y
@@ -233,28 +281,35 @@ func update_fov():
 			if cell.is_in_view:
 				cell.is_in_view = false
 				set_cell(cell_position, cell)
+
+	for y in [c_y - 1, c_y] + range(c_y + 1, max_y + 1):
+		var effective_floor_level = c_y if y <= c_y else (y - 1)
+		floors[effective_floor_level].clear_field_of_view()
+		floors[effective_floor_level].compute_field_of_view(Vector2i(c_x, c_z), RANGE)
 		
-	cache_cells.clear()
-	
-	floors[0].clear_field_of_view()
-	floors[0].compute_field_of_view(Utils.v3_to_v2i(entity_eyes.position), RANGE)
-	
-	for y in [c_y - 1, c_y]:
 		for x in range(c_x - RANGE, c_x + RANGE + 1):
 			for z in range(c_z - RANGE, c_z + RANGE + 1):
 				var cell_position = Vector3i(x, y, z)
 				var cell = cells.get(cell_position)
 				if not cell:
 					continue
-				
-				var is_in_view = floors[0].is_in_view(Vector2i(x, z))
+
+				var is_in_view = floors[effective_floor_level].is_in_view(Vector2i(x, z))
 				cell.is_in_view = is_in_view
 				cache_cells[cell_position] = cell
 				set_cell(cell_position, cell)
+				
+		if y <= 0:
+			continue
+
+		var vertical_cell_position := Vector3i(c_x, y, c_z)
+		var vertical_cell = cells.get(vertical_cell_position)
+		if vertical_cell and not vertical_cell.is_empty:
+			break
 
 
 func _process_cell_ray_hit():
-	var hit_info = Utils.get_raycast_hit(self, Game.camera.camera, cell_raycast, Utils.get_bitmask(1))
+	var hit_info = Utils.get_raycast_hit(self, Game.camera.eyes, cell_raycast, Utils.get_bitmask(1))
 	if hit_info:
 		is_cell_hovered = true
 		position_hovered = hit_info["position"] 
@@ -264,7 +319,7 @@ func _process_cell_ray_hit():
 
 
 func _process_entity_ray_hit():
-	var hit_info = Utils.get_raycast_hit(self, Game.camera.camera, entity_raycast, Utils.get_bitmask(2))
+	var hit_info = Utils.get_raycast_hit(self, Game.camera.eyes, entity_raycast, Utils.get_bitmask(2))
 	if hit_info:
 		entity_hovered = hit_info["collider"]
 	else:
@@ -272,22 +327,29 @@ func _process_entity_ray_hit():
 
 
 func _process_light_ray_hit():
-	var hit_info = Utils.get_raycast_hit(self, Game.camera.camera, light_raycast, Utils.get_bitmask(3))
+	var hit_info = Utils.get_raycast_hit(self, Game.camera.eyes, light_raycast, Utils.get_bitmask(3))
 	if hit_info:
 		light_hovered = hit_info["collider"].get_parent().get_parent()
 	else:
 		light_hovered = null
+
+
+func _process_floor_ray_hit():
+	var hit_info = Utils.get_raycast_hit(self, Game.camera.eyes, cell_raycast, Utils.get_bitmask(4))
+	if hit_info:
+		floor_hovered = snapped(hit_info["position"], Vector3(0.05, 0.05, 0.05))
 		
 
 func _process_preview_entity_move(delta):
 	if entity_hovered and not light_hovered and Input.is_action_just_pressed("left_click"):
 		preview_entity_move_mode = true
 		entity_moving = entity_hovered
-		offset_entity_moving = entity_moving.position - position_hovered
+		offset_entity_moving = entity_moving.position - floor_hovered
 		preview_entity = entity_scene.instantiate() as Entity
 		Game.world.map.add_child(preview_entity)
+		preview_entity.visible = true
 		preview_entity.preview = true
-		preview_entity.texture_path = entity_moving.texture_path
+		preview_entity.texture = entity_moving.texture
 		var preview_base_color = entity_moving.base_color
 		preview_base_color.a *= 0.5
 		preview_entity.base_color = preview_base_color
@@ -298,7 +360,7 @@ func _process_preview_entity_move(delta):
 		preview_entity.label_control.visible = false
 		preview_entity.selector.visible = true
 		
-	var preview_entity_position = position_hovered
+	var preview_entity_position = floor_hovered
 	preview_entity_position += normal_hovered * 0.1 * Vector3(1, 0, 1) + offset_entity_moving
 	
 	if preview_entity_move_mode:
@@ -309,7 +371,7 @@ func _process_preview_entity_move(delta):
 		preview_entity.queue_free()
 		preview_entity = null
 		var fallback_position = entity_moving.position
-		entity_moving.position = position_hovered
+		entity_moving.position = floor_hovered
 		entity_moving.position += normal_hovered * 0.1 + offset_entity_moving
 		entity_moving.position.y = 0
 		entity_moving.validate_position(fallback_position)
@@ -323,7 +385,7 @@ func _process_preview_light_move(delta):
 	if light_hovered and Input.is_action_just_pressed("left_click"):
 		preview_light_move_mode = true
 		light_moving = light_hovered
-		offset_light_moving = light_moving.position - position_hovered
+		offset_light_moving = light_moving.position - floor_hovered
 		preview_light = light_scene.instantiate() as Light
 		Game.world.map.add_child(preview_light)
 		preview_light.preview = true
@@ -333,7 +395,7 @@ func _process_preview_light_move(delta):
 		preview_light.position = light_moving.position
 		preview_light.selector.visible = true
 		
-	var preview_light_position := position_hovered
+	var preview_light_position := floor_hovered
 	preview_light_position += normal_hovered * 0.1 * Vector3(1, 0, 1) + offset_light_moving
 	
 	if preview_light_move_mode:
@@ -343,7 +405,7 @@ func _process_preview_light_move(delta):
 		preview_light_move_mode = false
 		preview_light.queue_free()
 		preview_light = null
-		light_moving.position = position_hovered
+		light_moving.position = floor_hovered
 		light_moving.position += normal_hovered * 0.1 + offset_light_moving
 		light_moving.position.y = 0
 		Commands.async_send(Commands.OpCode.SET_LIGHT_POSITION, {
@@ -356,16 +418,19 @@ func _process_preview_light_move(delta):
 # Objects #
 ###########
 
+var MIN_GRID_LEVEL = -10
+var MAX_GRID_LEVEL = 10
+
 var RANGE := 10
-const FILL := "Fill0"
-const COVER := "Cover0"
+const FILL := "fill0"
+const COVER := "cover0"
 
 
 class MapTheme:
-	var ground := "Stone0"
-	var wall := "Brick1"
-	var door_closed := "Door0"
-	var door_open := "Door1"
+	var ground := "stone0"
+	var wall := "brick1"
+	var door_closed := "door0"
+	var door_open := "door1"
 	
 
 class Cell:
@@ -433,12 +498,12 @@ func serialize_cell(cell_position : Vector3i, cell : Cell) -> Dictionary:
 	if cell.is_locked:
 		serialized_cell["locked"] = 1
 	return serialized_cell
-		
-	
+
+
 func deserialize_cell(serialized_cell : Dictionary) -> Cell:
 	var cell = Cell.new(self)
 	var skin = serialized_cell.get("s")
-	cell.skin = library.meshes.get_item_name(skin) if skin != null else ""
+	cell.skin = mesh_library.get_item_name(skin) if skin != null else ""
 	cell.orientation = serialized_cell.get("o", 0)
 	cell.emission = serialized_cell.get("l", 0)
 	cell.is_transparent = bool(serialized_cell.get("t", 0))
@@ -538,11 +603,14 @@ func deserialize(serialized_map : Dictionary):
 	max_y = serialized_map['to'][1]
 	max_z = serialized_map['to'][2]
 	
-	for y in range(min_y, max_y):
-		grids[y] = GridMap.new()
-		grids[y].mesh_library = library.meshes
-		grids[y].cell_size = Vector3.ONE
-		grid_parent.add_child(grids[y])
+	for y in range(min_y, max_y + 1):
+		var grid := GridMap.new()
+		grid.mesh_library = mesh_library
+		grid.cell_size = Vector3.ONE
+		grid.cell_octant_size = 1
+		grids[y] = grid
+		grid_parent.add_child(grid)
+		
 		floors[y] = MRPAS.new(Vector2(max_x - min_x, max_z - min_z ))
 	
 	for serialized_cell in serialized_map.get('cells', {}):
@@ -559,6 +627,8 @@ func deserialize(serialized_map : Dictionary):
 	
 	for serialized_light in serialized_map.get('lights', {}):
 		Commands.enqueue(Game.player_id, Commands.OpCode.NEW_LIGHT, serialized_light)
+		
+	Game.world.floor_level_changed.emit(0)
 	
 
 func serialize_explored() -> Dictionary:
@@ -580,4 +650,3 @@ func deserialize_explored(serialized_explored : Dictionary):
 			serialized_cell["z"],
 		)
 		cells_explored[cell_position] = deserialize_cell(serialized_cell)
-	

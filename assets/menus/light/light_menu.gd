@@ -1,7 +1,9 @@
+class_name LightMenu
 extends Control
 
 
 var light : Light
+var is_new_light : bool
 
 
 @onready var accept_button := %AcceptButton as Button
@@ -16,8 +18,9 @@ var light : Light
 @onready var following_edit := %FollowingEdit as LineEdit
 
 
-func use_light(p_light):
+func use_light(p_light, p_is_new_light=false):
 	light = p_light
+	is_new_light = p_is_new_light
 
 
 func _ready():
@@ -29,7 +32,7 @@ func _ready():
 	%TabBar.gui_input.connect(_on_input)
 	
 	if light:
-		id_edit.text = str(light.name)
+		id_edit.text = light.id
 		intensity_edit.value = light.intensity
 		bright_edit.value = light.bright
 		faint_edit.value = light.faint
@@ -47,31 +50,32 @@ func _on_delete_button_pressed():
 	queue_free()
 	light.get_parent().remove_child(light)
 	light.queue_free()
-	Commands.async_send(Commands.OpCode.DELETE_LIGHT, {
-		"id": str(light.name)
-	})
+	
+	if not is_new_light:
+		Commands.async_send(Commands.OpCode.DELETE_LIGHT, {
+			"id": str(light.name)
+		})
 	
 	light.forget()
+	
 	Game.world.map.update_fov()
 	
 
 func _on_cancel_button_pressed():
+	if is_new_light:
+		light.get_parent().remove_child(light)
+		light.queue_free()
+		
 	queue_free()
 
 
 func _on_apply_button_pressed():
-	var is_new_light = false
-	if not light:
-		is_new_light = true
-		light = Game.light_scene.instantiate()
-		Game.world.map.lights_parent.add_child(light)
-		light.position = Game.world.pointer.position + Vector3(0.5, Light.DEFAULT_HEIGHT, 0.5)
-
+	light.name = id_edit.text
+	
 	light.intensity = int(intensity_edit.value)
 	light.bright = int(bright_edit.value)
 	light.faint = int(faint_edit.value)
 	light.follow = following_edit.text
-	light.name = id_edit.text
 	
 	if is_new_light:
 		Commands.async_send(Commands.OpCode.NEW_LIGHT, {

@@ -1,0 +1,113 @@
+[gd_scene load_steps=3 format=3 uid="uid://cagwreixkjyns"]
+
+[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="1_2gu83"]
+[ext_resource type="Script" path="res://assets/menus/entity/entity_permissions_menu.gd" id="2_06mgr"]
+
+[node name="EntityPermissionsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme = ExtResource("1_2gu83")
+script = ExtResource("2_06mgr")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -294.5
+offset_top = -176.5
+offset_right = 294.5
+offset_bottom = 176.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TabBar" type="TabBar" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(81.5, 0)
+layout_mode = 2
+size_flags_horizontal = 2
+tab_count = 1
+tab_0/title = "Entity Permissions"
+
+[node name="IdLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "ID:"
+vertical_alignment = 1
+
+[node name="IdEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(103.105, 0)
+layout_mode = 2
+text = "ABCDEFGH"
+editable = false
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="LabelEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer3"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_force_pass_scroll_events = false
+placeholder_text = "name..."
+alignment = 1
+editable = false
+
+[node name="PlayerPermissionsTree" type="Tree" parent="Panel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+columns = 3
+hide_root = true
+select_mode = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="AcceptButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Accept"
+
+[node name="CancelButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Cancel"
+
+[node name="ApplyButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Apply
+"

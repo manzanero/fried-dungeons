@@ -72,7 +72,7 @@ func _command_set_map(command : Command):
 	Game.world.map = map_scene.instantiate() as Map
 	Game.world.maps_parent.add_child(Game.world.map)
 	
-	Game.world.map.load_map(command.kwargs)
+	Game.world.map.set_map(command.kwargs)
 
 
 func _command_save_map(_command : Command):

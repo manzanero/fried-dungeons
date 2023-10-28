@@ -1,8 +1,16 @@
 [gd_scene load_steps=7 format=3 uid="uid://cm3vo5ymaal1d"]
 
 [ext_resource type="Script" path="res://assets/pointer/grid.gd" id="1_t2qrv"]
-[ext_resource type="ArrayMesh" uid="uid://bupy38qqp2n4m" path="res://resources/meshes/grid1.obj" id="2_rnle8"]
 [ext_resource type="Shader" path="res://resources/meshes/grid.gdshader" id="3_6552o"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_qgnxn"]
+top_radius = 0.05
+bottom_radius = 0.05
+height = 9.0
+radial_segments = 16
+rings = 1
+cap_top = false
+cap_bottom = false
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0y5ar"]
 render_priority = 0
@@ -21,9 +29,74 @@ script = ExtResource("1_t2qrv")
 
 [node name="GridPivot" type="Marker3D" parent="."]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GridPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, -0.05, 0.55)
-mesh = ExtResource("2_rnle8")
+[node name="0" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -3, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="1" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -2, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="2" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -1, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="3" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="4" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 1, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="5" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 2, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="6" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 3, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="7" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0, 0, -3)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="8" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0, 0, -2)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="9" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0, 0, -1)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="10" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0, 0, 0)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="11" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0, 0, 1)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="12" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0, 0, 2)
+mesh = SubResource("CylinderMesh_qgnxn")
+surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
+
+[node name="13" type="MeshInstance3D" parent="GridPivot"]
+transform = Transform3D(-4.37114e-08, 1, -4.37114e-08, 0, -4.37114e-08, -1, -1, -4.37114e-08, 1.91069e-15, 0, 0, 3)
+mesh = SubResource("CylinderMesh_qgnxn")
 surface_material_override/0 = SubResource("ShaderMaterial_0y5ar")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="."]

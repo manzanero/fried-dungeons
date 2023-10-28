@@ -18,7 +18,7 @@ var health_known := false : set = _set_health_known
 
 var base_size := 0.5 : set = _set_base_size
 var base_color := Color.WHITE : set = _set_base_color
-var texture_path : String = "None" : set = _set_texture
+var texture : String = "None" : set = _set_texture
 var body_tint := Color.WHITE : set = _set_body_tint
 
 const SPEED := 250.0
@@ -29,6 +29,7 @@ var preview : bool
 var position_changed : bool
 var cell_position : Vector3i
 var moving_to_target : bool
+var direction : Vector3
 
 var target_position : Vector3 :
 	set(value):
@@ -43,14 +44,19 @@ var is_selected : bool :
 	set(value):
 		if selector.visible != value:
 			selector.visible = value
+			
+var default_permissions : Array[Game.EntityPermission]
+var players_permissions : Dictionary
 
 var light : Light
 
 
 @onready var base := $Base as MeshInstance3D
 @onready var body := $Body as SpriteMeshInstance
+@onready var eyes := $Eyes as Camera3D
 @onready var selector := $Selector as MeshInstance3D
 @onready var update_timer := $UpdateTimer as Timer
+@onready var info := $Info as CanvasLayer
 @onready var label_control := $Info/Label as Control
 @onready var label_label := %LabelLabel as Label
 @onready var healt_bar := %HealthBar as ProgressBar
@@ -68,16 +74,31 @@ func _ready():
 		randf_range(-1, 1)).normalized() * 0.01
 
 	selector.visible = false
-
+	
+	_set_texture('None')
 	_set_label(label)
 	_set_label_known(label_known)
 	_set_health(health)
 	_set_health_max(health_max)
 	_set_health_known(health_known)
 	
+	_update()
+	
 
 func _process(_delta):
-	label_control.position = Game.camera.camera.unproject_position(position)
+	label_control.position = Game.camera.eyes.unproject_position(position)
+	
+	var look_direction
+	var current_eyes = Game.world.map.entity_eyes
+	if Game.camera.eyes.current:
+		look_direction = Game.camera.eyes.global_transform.basis.z
+		look_direction.y = 0
+		body.look_at(body.global_position + look_direction, Vector3(0, 1, 0))
+	elif current_eyes != self:
+		look_direction = current_eyes.position - position
+		look_direction.y = 0
+		body.look_at(body.global_position + look_direction, Vector3(0, 1, 0))
+
 	if light:
 		light.position = position
 
@@ -91,17 +112,22 @@ func _physics_process(delta):
 			if self == Game.world.map.entity_eyes:
 				Game.world.map.update_fov()
 				
-	elif Game.world.map and Game.world.map.entity_eyes == self:
+	elif Game.world.map.entity_eyes == self or eyes.current:
 		_move_process(delta)
 	
 
 func _move_process(delta):
 	var input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	
+	if eyes.current:
+		direction = Vector3(input_dir.x, 0, input_dir.y).normalized().rotated(Vector3.UP, eyes.rotation.y)
+	else:
+		direction = Vector3(input_dir.x, 0, input_dir.y).normalized().rotated(Vector3.UP, Game.camera.rotation.y)
+		
 	if direction:
 		velocity.x = direction.x * SPEED * delta
 		velocity.z = direction.z * SPEED * delta
-		body.look_at(position + direction)
+		#body.look_at(body.global_position + direction)
 	else:
 		velocity.x = move_toward(velocity.x, 0, SPEED * delta)
 		velocity.z = move_toward(velocity.z, 0, SPEED * delta)
@@ -123,7 +149,7 @@ func validate_position(fallback_position := Vector3(0, 0, 0)):
 		return
 	
 	if cell.is_door and not cell.is_open and not cell.is_locked:
-		cell.skin = 'Door1'
+		cell.skin = 'door1'
 		cell.is_empty = true
 		cell.is_transparent = true
 		cell.is_open = true
@@ -137,6 +163,17 @@ func validate_position(fallback_position := Vector3(0, 0, 0)):
 		return 
 
 	position = fallback_position
+
+
+func use_entity_eyes():
+	eyes.current = true
+	body.visible = false
+	cell_changed.emit()
+	
+	
+func exit_entity_eyes():
+	body.visible = true
+	Game.world.exit_entity_eyes()
 
 
 func get_cell() -> Map.Cell:
@@ -172,6 +209,9 @@ func _update():
 	var new_cell_position = Utils.v3_to_v3i(position)
 	if new_cell_position != cell_position:
 		cell_position = new_cell_position
+#		if not is_instance_valid(light):  # light will update vision
+#			cell_changed.emit()
+
 		cell_changed.emit()
 	
 	# calculate if entity has been moved
@@ -184,19 +224,12 @@ func _update():
 
 
 func change(kwargs):
-	
-	# TODO: remove this
-#	if kwargs["id"] in Game.public_entities:
-#		label_known = true
-#		health_known = true
-#		Game.world.map.change_to_entity_eyes(self)
-		
 	if "label" in kwargs: 
 		label = kwargs["label"]
 	if "label_known" in kwargs: 
 		label_known = kwargs["label_known"]
-	if "texture_path" in kwargs: 
-		texture_path = kwargs["texture_path"]
+	if "texture" in kwargs: 
+		texture = kwargs["texture"]
 	if "base_color" in kwargs: 
 		base_color = kwargs["base_color"]
 	if "base_size" in kwargs: 
@@ -209,6 +242,8 @@ func change(kwargs):
 		health_known = kwargs["health_known"]
 
 	changed.emit()
+	
+	_update()
 
 
 ###################
@@ -261,18 +296,25 @@ func _set_base_color(value):
 	base_color = value
 	base.mesh.surface_get_material(0).albedo_color = base_color
 	
+	light_fixture = Color.TRANSPARENT
+	
 
 func _set_texture(value):
-	texture_path = value
+	texture = value
 	body.mesh_depth = 2
 	body.mesh_double_sided = true
 	
 	if value != 'None':
-		body.texture = load(value)
+		body.texture = load("res://resources/entity_textures/%s.png" % [value])
+		var height = body.texture.get_height()
 		body.update_sprite_mesh()
 		var sprite_mesh = body.generated_sprite_mesh
 		body.mesh = sprite_mesh.meshes[0]
 		body.material_override = sprite_mesh.material
+		body.position.y = height * 0.025 + 0.1
+		
+		if is_instance_valid(light):
+			light.pivot.position.y = height * 0.05 + 0.3
 		
 	else:
 		body.texture = null
@@ -284,6 +326,24 @@ func _set_body_tint(value):
 	body_tint = value
 	body.get_surface_override_material(0).albedo_color = body_tint
 
+
+#########
+# input #
+#########
+
+var look_sen = 2
+
+func _unhandled_input(event: InputEvent) -> void:
+	if eyes.current:
+	
+		if event is InputEventMouseMotion:
+			var look_dir = event.relative * 0.001
+			eyes.rotation.y -= look_dir.x * look_sen
+			eyes.rotation.x = clamp(eyes.rotation.x - look_dir.y * look_sen, deg_to_rad(-89), deg_to_rad(89))
+			
+		if Input.is_action_just_pressed("ui_cancel"): 
+			exit_entity_eyes()
+			
 
 ###############
 # Serializers #
@@ -301,6 +361,6 @@ func serialize():
 	serialized_entity["health_known"] = health_known
 	serialized_entity["base_size"] = base_size
 	serialized_entity["base_color"] = Utils.color_to_string(base_color)
-	serialized_entity["texture_path"] = texture_path
+	serialized_entity["texture"] = texture
 	return serialized_entity
 	

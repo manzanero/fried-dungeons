@@ -1,42 +1,47 @@
-[gd_scene load_steps=13 format=3 uid="uid://cfvnrqu5lwgj2"]
+[gd_scene load_steps=14 format=3 uid="uid://cfvnrqu5lwgj2"]
 
 [ext_resource type="Script" path="res://scenes/world/world.gd" id="1_lu7c3"]
+[ext_resource type="Script" path="res://assets/map/library.gd" id="2_gt087"]
 [ext_resource type="Script" path="res://assets/camera/camera.gd" id="2_hhmyh"]
 [ext_resource type="PackedScene" uid="uid://cm3vo5ymaal1d" path="res://assets/pointer/grid.tscn" id="3_ssmua"]
 [ext_resource type="PackedScene" uid="uid://cx2okcrb4o0n1" path="res://assets/pointer/pointer.tscn" id="5_hhb5x"]
 [ext_resource type="Environment" uid="uid://c5t856858r76b" path="res://scenes/world/world_environment.tres" id="5_i24rl"]
 [ext_resource type="Texture2D" uid="uid://b18bipndj3wqn" path="res://resources/mesh_libraries/solids/brick/1/icon.png" id="7_0ymwg"]
+[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="7_q6fxt"]
 [ext_resource type="Script" path="res://assets/menus/cell/cell_menu.gd" id="7_v2w22"]
 [ext_resource type="Theme" uid="uid://bbmp4uwlx25jx" path="res://resources/themes/pixel_ui_theme/PixelTheme_paper.tres" id="8_7jedo"]
 [ext_resource type="Texture2D" uid="uid://bif8bjxlsngrg" path="res://resources/mesh_libraries/solids/brick/0/icon.png" id="8_dq08g"]
 [ext_resource type="Theme" uid="uid://dopunvp7uxup1" path="res://resources/themes/pixel_ui_theme/PixelTheme_blood.tres" id="8_nqa4r"]
-[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="8_q5ir4"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_x1uhu"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_lu7c3")
 
+[node name="MapLibrary" type="Node" parent="."]
+script = ExtResource("2_gt087")
+
 [node name="Maps" type="Node3D" parent="."]
 
 [node name="Pointer" parent="." instance=ExtResource("5_hhb5x")]
+
+[node name="Grid" parent="." instance=ExtResource("3_ssmua")]
+unique_name_in_owner = true
 
 [node name="CameraPivot" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
 script = ExtResource("2_hhmyh")
 max_zoom = 100.0
 
-[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+[node name="CameraTranform" type="Marker3D" parent="CameraPivot"]
 transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/CameraTranform"]
+unique_name_in_owner = true
 current = true
 fov = 30.0
 size = 20.0
 far = 1000.0
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.5, 0.866025, 3.78552e-08, 0, -4.37114e-08, 1, 0.866025, -0.5, -2.18557e-08, 0, 0, 0)
-visible = false
-light_energy = 0.25
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = ExtResource("5_i24rl")
@@ -49,9 +54,6 @@ autostart = true
 wait_time = 10.25
 autostart = true
 
-[node name="Grid" parent="." instance=ExtResource("3_ssmua")]
-unique_name_in_owner = true
-
 [node name="HUDCanvas" type="CanvasLayer" parent="."]
 layer = 2
 
@@ -63,7 +65,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme = ExtResource("8_q5ir4")
+theme = ExtResource("7_q6fxt")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HUDCanvas/UI"]
 layout_mode = 1
@@ -76,11 +78,11 @@ theme_override_constants/separation = 0
 alignment = 1
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer"]
+custom_minimum_size = Vector2(240, 0)
 layout_mode = 2
 
 [node name="TokensPanel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(245.735, 107.37)
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -195,7 +197,8 @@ text = "Bellow
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TabBar" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="CategoryTabBar" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 mouse_force_pass_scroll_events = false
 drag_to_rearrange_enabled = true
@@ -205,7 +208,8 @@ tab_1/title = "Dirt"
 tab_2/title = "fdsgfd"
 tab_3/title = "rfge"
 
-[node name="ItemList" type="ItemList" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer"]
+[node name="CategoryItemList" type="ItemList" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2/CellEditPanel/MarginContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 auto_height = true
@@ -235,6 +239,7 @@ theme = ExtResource("8_nqa4r")
 text = "Cancel"
 
 [node name="ConsolePanel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer2"]
+visible = false
 custom_minimum_size = Vector2(0, 160)
 layout_mode = 2
 
@@ -282,12 +287,11 @@ text = "Close"
 
 [node name="VBoxContainer3" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer"]
 clip_contents = true
-custom_minimum_size = Vector2(200, 0)
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 
 [node name="CommandsPanel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -309,22 +313,10 @@ layout_mode = 2
 [node name="TabBar" type="TabBar" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 tab_count = 1
-tab_0/title = "Commands"
+tab_0/title = "Map"
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-
-[node name="NewEntity" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "New Entity +"
-alignment = 0
-
-[node name="NewLight" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/VBoxContainer"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "New Light +"
-alignment = 0
 
 [node name="TotalVision" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/VBoxContainer"]
 unique_name_in_owner = true
@@ -338,10 +330,46 @@ layout_mode = 2
 text = "Forget Explored"
 alignment = 0
 
+[node name="HBoxContainer" type="HBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 6
+
+[node name="Panel" type="Panel" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CenterContainer" type="CenterContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/HBoxContainer/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FloorLevelLabel" type="Label" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/HBoxContainer/Panel/CenterContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "0"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="NextFloorButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Next Floor"
+
+[node name="PreviousFloorButton" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer/HBoxContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Previous Floor"
+
 [node name="SaveExit" type="Button" parent="HUDCanvas/UI/HBoxContainer/VBoxContainer3/CommandsPanel/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 10
+size_flags_vertical = 6
 theme = ExtResource("8_nqa4r")
 text = "Save & Exit"
 alignment = 0
@@ -396,10 +424,10 @@ offset_bottom = 40.0
 [node name="CellContextualMenu" type="Panel" parent="HUDCanvas/UI/Contextual"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 177.0
-offset_top = -103.0
-offset_right = 289.0
-offset_bottom = -11.0
+offset_left = -282.0
+offset_top = 38.0
+offset_right = -131.0
+offset_bottom = 206.0
 
 [node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/Contextual/CellContextualMenu"]
 layout_mode = 1
@@ -428,6 +456,17 @@ layout_mode = 2
 text = "Edit
 "
 
+[node name="CellNewEntityButton" type="Button" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "New Entity"
+
+[node name="CellNewLightButton" type="Button" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "New Light
+"
+
 [node name="InfoButton" type="Button" parent="HUDCanvas/UI/Contextual/CellContextualMenu/MarginContainer/VBoxContainer"]
 visible = false
 layout_mode = 2
@@ -443,10 +482,10 @@ text = "Actions"
 [node name="LightContextualMenu" type="Panel" parent="HUDCanvas/UI/Contextual"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 217.0
-offset_top = -230.0
-offset_right = 329.0
-offset_bottom = -138.0
+offset_left = -425.0
+offset_top = 33.0
+offset_right = -313.0
+offset_bottom = 125.0
 
 [node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/Contextual/LightContextualMenu"]
 layout_mode = 1
@@ -478,10 +517,10 @@ text = "Edit
 [node name="EntityContextualMenu" type="Panel" parent="HUDCanvas/UI/Contextual"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 357.0
-offset_top = -147.0
-offset_right = 469.0
-offset_bottom = -17.0
+offset_left = -602.0
+offset_top = 27.0
+offset_right = -442.0
+offset_bottom = 233.0
 
 [node name="MarginContainer" type="MarginContainer" parent="HUDCanvas/UI/Contextual/EntityContextualMenu"]
 layout_mode = 1
@@ -510,14 +549,17 @@ layout_mode = 2
 text = "Edit
 "
 
-[node name="EntityInfoButton" type="Button" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
-visible = false
+[node name="EntityPermissionsButton" type="Button" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
-text = "Info
-
-"
+text = "Permissions"
 
 [node name="EntityVisionButton" type="Button" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Vision"
+
+[node name="EntityEyesButton" type="Button" parent="HUDCanvas/UI/Contextual/EntityContextualMenu/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Eyes"

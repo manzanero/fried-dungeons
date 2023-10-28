@@ -1,16 +1,30 @@
 class_name World
 extends Node3D
 
-var map_scene = preload("res://assets/map/map.tscn")
-var light_scene = preload("res://assets/light/light.tscn")
-var entity_scene = preload("res://assets/entity/entity.tscn")
-var light_menu_scene = preload("res://assets/menus/light/light_menu.tscn")
-var entity_menu_scene = preload("res://assets/menus/entity/entity_menu.tscn")
+signal floor_level_changed(new_level)
+signal eyes_changed()
+
+var map_scene : PackedScene = preload("res://assets/map/map.tscn")
+var light_scene : PackedScene = preload("res://assets/light/light.tscn")
+var entity_scene : PackedScene = preload("res://assets/entity/entity.tscn")
+var light_menu_scene : PackedScene = preload("res://assets/menus/light/light_menu.tscn")
+var entity_menu_scene : PackedScene = preload("res://assets/menus/entity/entity_menu.tscn")
+var entity_permissions_menu_scene : PackedScene = preload("res://assets/menus/entity/entity_permissions_menu.tscn")
 
 var tick := 0.1
 var selected_light : Light
 var selected_entity : Entity
+var map : Map
 
+var floor_level : int : 
+	get:
+		return int(floor_level_label.text)
+	set(value):
+		floor_level_label.text = str(value)
+		floor_level_changed.emit(value)
+
+	
+@onready var map_library := $MapLibrary as MapLibrary
 @onready var maps_parent := $Maps as Node3D
 @onready var pointer := $Pointer as Pointer
 @onready var update_timer := $UpdateTimer as Timer
@@ -18,41 +32,45 @@ var selected_entity : Entity
 
 @onready var player_name_tab := %PlayerNameTab as TabBar
 
-@onready var tokens_panel := %TokensPanel as Panel
-@onready var tokens_tree := %TokensTree as Tree
-
-@onready var commands_panel := %CommandsPanel as Panel
-@onready var new_entity_button := %NewEntity as Button
-@onready var new_light_button := %NewLight as Button
-@onready var total_vision_button := %TotalVision as Button
-@onready var forget_explored_button := %ForgetExplored as Button
-@onready var save_exit_button := %SaveExit as Button
-
 @onready var cell_contextual_menu := %CellContextualMenu as Panel
 @onready var cell_edit_button := %CellEditButton as Button
-@onready var cell_edit_panel := %CellEditPanel
-@onready var grid := %Grid
+@onready var cell_new_entity_button := %CellNewEntityButton as Button
+@onready var cell_new_light_button := %CellNewLightButton as Button
+@onready var cell_edit_panel := %CellEditPanel as CellEditMenu
+@onready var grid := %Grid as Grid
 
 @onready var light_contextual_menu := %LightContextualMenu as Panel
 @onready var light_edit_button := %LightEditButton as Button
 
 @onready var entity_contextual_menu := %EntityContextualMenu as Panel
 @onready var entity_edit_button := %EntityEditButton as Button
+@onready var entity_permissions_button := %EntityPermissionsButton as Button
 @onready var entity_vision_button := %EntityVisionButton as Button
+@onready var entity_eyes_button := %EntityEyesButton as Button
 
-@onready var map : Map = null
+@onready var tokens_panel := %TokensPanel as Panel
+@onready var tokens_tree := %TokensTree as Tree
+
+@onready var commands_panel := %CommandsPanel as Panel
+@onready var total_vision_button := %TotalVision as Button
+@onready var forget_explored_button := %ForgetExplored as Button
+
+@onready var floor_level_label := %FloorLevelLabel as Label
+@onready var next_floor_button := %NextFloorButton as Button
+@onready var previous_floor_button := %PreviousFloorButton as Button
+
+@onready var save_exit_button := %SaveExit as Button
 
 
 func _ready():
+	map_library.load_library()
 	Game.camera = $CameraPivot
-	
-	for child in maps_parent.get_children():
-		child.queue_free()
 		
 	commands_panel.visible = Game.is_host
 	player_name_tab.set_tab_title(0, Game.player_label)
 	
-	save_timer.timeout.connect(Commands.enqueue.bind(Game.player_id, Commands.OpCode.SAVE_MAP))
+	# Saver
+#	save_timer.timeout.connect(Commands.enqueue.bind(Game.player_id, Commands.OpCode.SAVE_MAP))
 	
 	pointer.is_pointing = false
 	grid.active = false 
@@ -61,25 +79,30 @@ func _ready():
 	update_timer.autostart = true
 	update_timer.timeout.connect(_update)
 	
-	new_entity_button.pressed.connect(_on_new_entity_button_pressed)
-	new_light_button.pressed.connect(_on_new_light_button_pressed)
-	total_vision_button.pressed.connect(_on_total_vision_button_pressed)
-	forget_explored_button.pressed.connect(_on_forget_explored_button_pressed)
-	save_exit_button.pressed.connect(_on_save_exit_button_button_pressed)
-	
 	cell_contextual_menu.visible = false
 	cell_edit_panel.visible = false
 	cell_edit_button.pressed.connect(_on_cell_edit_button_pressed)
+	cell_new_entity_button.pressed.connect(_on_cell_new_entity_button_pressed)
+	cell_new_light_button.pressed.connect(_on_cell_new_light_button_pressed)
 	
 	light_contextual_menu.visible = false
 	light_edit_button.pressed.connect(_on_light_edit_button_pressed)
 	
 	entity_contextual_menu.visible = false
 	entity_edit_button.pressed.connect(_on_entity_edit_button_pressed)
+	entity_permissions_button.pressed.connect(_on_entity_permissions_button_pressed)
 	entity_vision_button.pressed.connect(_on_entity_vision_button_pressed)
-
+	entity_eyes_button.pressed.connect(_on_entity_eyes_button_pressed)
+	
 	tokens_tree.item_selected.connect(_select_tokens_tree)
 	tokens_tree.item_activated.connect(_activate_tokens_tree)
+	
+	total_vision_button.pressed.connect(_on_total_vision_button_pressed)
+	forget_explored_button.pressed.connect(_on_forget_explored_button_pressed)
+	save_exit_button.pressed.connect(_on_save_exit_button_button_pressed)
+	
+	next_floor_button.pressed.connect(func(): floor_level += 1)
+	previous_floor_button.pressed.connect(func(): floor_level -= 1)
 
 	var current_map = Game.player.map
 	var is_valid_map = current_map and current_map != 'None' and current_map in Game.campaign.maps.keys()
@@ -98,7 +121,6 @@ func _ready():
 		])
 
 #	test_commands()
-#	test_fried_commands()
 	
 
 func populate_tokens_tree():
@@ -137,14 +159,6 @@ func _activate_tokens_tree():
 	entity_contextual_menu.position = get_viewport().get_mouse_position()
 	entity_contextual_menu.visible = true
 	
-	
-func _on_show_ceiling_button_toggled(pressed : bool):
-	Game.world.map.ceiling_map.visible = pressed
-	
-
-func _on_show_ground_button_toggled(pressed : bool):
-	Game.world.map.ground_map.visible = pressed
-	
 
 func _update():
 	%MapValue.text = map.id if map else "None"
@@ -169,6 +183,34 @@ func _on_cell_edit_button_pressed():
 	grid.active = true
 
 
+func _on_cell_new_entity_button_pressed():
+	var entity : Entity = entity_scene.instantiate()
+	entity.id = UUID.short()
+	map.entities_parent.add_child(entity)
+	entity.position = pointer.position + Vector3(0.5, 1, 0.5)
+	
+	var entity_menu : EntityMenu = entity_menu_scene.instantiate()
+	entity_menu.use_entity(entity, true)
+	%Middle.add_child(entity_menu)
+	entity_menu.position = Vector2(0, -entity_menu.size.y / 2)
+	
+	cell_contextual_menu.visible = false
+
+		
+func _on_cell_new_light_button_pressed():
+	var light : Light = light_scene.instantiate()
+	light.id = UUID.short()
+	map.lights_parent.add_child(light)
+	light.position = pointer.position + Vector3(0.5, 1, 0.5)
+	
+	var light_menu : LightMenu = light_menu_scene.instantiate()
+	light_menu.use_light(light, true)
+	%Middle.add_child(light_menu)
+	light_menu.position = Vector2(0, -light_menu.size.y / 2)
+	
+	cell_contextual_menu.visible = false
+
+
 func _on_light_edit_button_pressed():
 	var light_menu = light_menu_scene.instantiate()
 	light_menu.use_light(selected_light)
@@ -183,28 +225,41 @@ func _on_entity_edit_button_pressed():
 	entity_contextual_menu.visible = false
 
 
+func _on_entity_permissions_button_pressed():
+	var entity_permissions_menu := entity_permissions_menu_scene.instantiate() as EntityPermissionsMenu
+	entity_permissions_menu.use_entity(selected_entity)
+	%Middle.add_child(entity_permissions_menu)
+	entity_contextual_menu.visible = false
+
+
 func _on_entity_vision_button_pressed():
-	map.change_to_entity_eyes(selected_entity)
+	map.change_to_entity_vision(selected_entity)
 	selected_entity.cell_changed.emit()
 	entity_contextual_menu.visible = false
 
-		
-func _on_new_entity_button_pressed():
-	var entity_menu = entity_menu_scene.instantiate()
-	%Middle.add_child(entity_menu)
-	entity_menu.id_edit.text = UUID.short()
-	entity_menu.position = Vector2(0, -entity_menu.size.y / 2)
 
+func _on_entity_eyes_button_pressed():
+	for entity in map.entities_parent.get_children():
+		entity.info.visible = false
 		
-func _on_new_light_button_pressed():
-	var light_menu = light_menu_scene.instantiate()
-	%Middle.add_child(light_menu)
-	light_menu.id_edit.text = UUID.short()
-	light_menu.position = Vector2(0, -light_menu.size.y / 2)
+	map.change_to_entity_vision(selected_entity)
+	selected_entity.use_entity_eyes()
+	entity_contextual_menu.visible = false
+	$HUDCanvas/UI.visible = false
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	
+	eyes_changed.emit()
+
+
+func exit_entity_eyes():
+	Game.camera.eyes.current = true
+	$HUDCanvas/UI.visible = true
+	floor_level_changed.emit(floor_level)
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	
 	
 func _on_total_vision_button_pressed():
-	map.change_to_entity_eyes(null)
+	map.change_to_entity_vision(null)
 	
 	
 func _on_forget_explored_button_pressed():
@@ -227,7 +282,7 @@ func _unhandled_input(event):
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.is_pressed():
 				
-				print("unhandled world click")
+#				print("unhandled world click")
 				
 				cell_contextual_menu.visible = false
 				light_contextual_menu.visible = false
@@ -279,17 +334,10 @@ func _unhandled_input(event):
 ########
 
 func test_fried_commands():
-#	enqueue(Commands.OpCode.SAVE_MAP)
 	if Game.is_host:
 		Commands.enqueue(Game.player_id, Commands.OpCode.SET_MAP, {
 			"file": "user://maps/0.json",
 		})
-#	enqueue(OpCode.NEW_LIGHT, {
-#		"id": "0",
-#		"position": Utils.v3_to_array(Vector3(14, 0, 24.5)),
-#		"bright": 5,
-#		"faint": 10,
-#	})
 
 
 func test_commands():
@@ -303,13 +351,7 @@ func test_commands():
 	Commands.enqueue(Game.player_id, Commands.OpCode.NEW_ENTITY, {
 		"id": "0",
 		"label": "0",
-		"texture_path": "res://resources/entity_textures/monsters/undead/undead_101.png",
+		"texture": "monsters/undead/undead_101",
 		"position": Utils.v3_to_array(Vector3(14, 0, 24.5)),
 		"base_color": Utils.color_to_string(Color.BLUE),
 	})
-	
-
-func test_populate_grid():
-	for x in range(5):
-		for z in range(25):
-			map.solid_map.set_cell_item(Vector3i(x, -1, z), [0,1,3].pick_random(), Data.orientations.pick_random())

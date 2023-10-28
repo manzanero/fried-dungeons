@@ -29,11 +29,13 @@ var new_rotation: Vector3
 var new_position: Vector3
 var offset_move: Vector2
 var offset_wheel: int
+var floor_level: float = 1
 var zoom: float = 1
 
 var is_operated : bool
 
-@onready var camera = $Camera3D
+@onready var eyes := %Camera3D as Camera3D
+@onready var eyes_transform = $CameraTranform
 
 
 func _ready():
@@ -58,15 +60,19 @@ func _process(delta):
 		new_position.z = clamp(new_position.z, min_z, max_z)
 		
 	offset_move = Vector2.ZERO
+	
+	if position.y != float(floor_level):
+		position.y = floor_level
+	
+	if position != new_position:
+		position.x = lerp(position.x, new_position.x, zoom_speed * delta)
+		position.z = lerp(position.z, new_position.z, zoom_speed * delta)
 
-	if not position == new_position:
-		position = lerp(position, new_position, zoom_speed * delta)
-
-	if not rotation == new_rotation:
+	if rotation != new_rotation:
 		rotation = lerp(rotation, new_rotation, zoom_speed * delta)
 
-	if not camera.position.z == zoom:
-		camera.position.z = lerp(camera.position.z, zoom, zoom_speed * delta)
+	if eyes.position.z != zoom:
+		eyes.position.z = lerp(eyes.position.z, zoom, zoom_speed * delta)
 
 
 func _input(event):

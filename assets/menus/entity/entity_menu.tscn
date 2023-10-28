@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://wur7a8tyi405"]
 
-[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="1_3fkey"]
+[ext_resource type="Theme" uid="uid://dnpvxewkoebee" path="res://resources/themes/pixel_ui_theme/PixelTheme_dark_fade.tres" id="1_4qqgb"]
 [ext_resource type="Script" path="res://assets/menus/entity/entity_menu.gd" id="1_mesci"]
 [ext_resource type="Theme" uid="uid://dopunvp7uxup1" path="res://resources/themes/pixel_ui_theme/PixelTheme_blood.tres" id="3_3qgit"]
 
@@ -14,7 +14,7 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 4
-theme = ExtResource("1_3fkey")
+theme = ExtResource("1_4qqgb")
 script = ExtResource("1_mesci")
 
 [node name="Panel" type="Panel" parent="."]
@@ -26,7 +26,7 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -358.0
 offset_top = -174.0
-offset_right = 308.0
+offset_right = 366.0
 offset_bottom = 123.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -92,11 +92,11 @@ theme_override_constants/margin_bottom = 10
 
 [node name="GridContainer2" type="GridContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer"]
 layout_mode = 2
+theme_override_constants/h_separation = 8
 columns = 2
 
 [node name="Label" type="Label" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 layout_mode = 2
-size_flags_horizontal = 3
 text = "Label:"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
@@ -130,7 +130,7 @@ theme_override_constants/separation = 10
 [node name="HelathEdit" type="SpinBox" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2/HBoxContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 6
+size_flags_horizontal = 3
 min_value = -999.0
 max_value = 999.0
 value = 20.0
@@ -210,6 +210,7 @@ text = "Texture:"
 [node name="TokenTextureLabel" type="LineEdit" parent="Panel/MarginContainer/HBoxContainer2/VBoxContainer/Panel/MarginContainer/GridContainer2"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 text = "None"
 editable = false
 
