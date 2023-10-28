@@ -45,8 +45,7 @@ var is_selected : bool :
 		if selector.visible != value:
 			selector.visible = value
 			
-var default_permissions : Array[Game.EntityPermission]
-var players_permissions : Dictionary
+var permissions : Dictionary
 
 var light : Light
 
@@ -209,10 +208,8 @@ func _update():
 	var new_cell_position = Utils.v3_to_v3i(position)
 	if new_cell_position != cell_position:
 		cell_position = new_cell_position
-#		if not is_instance_valid(light):  # light will update vision
-#			cell_changed.emit()
-
-		cell_changed.emit()
+		if not is_instance_valid(light):  # light will update vision
+			cell_changed.emit()
 	
 	# calculate if entity has been moved
 	if position_changed and not moving_to_target:

@@ -1,9 +1,13 @@
 shader_type spatial;
 render_mode unshaded;
 render_mode depth_prepass_alpha;
+//render_mode depth_draw_opaque;
+//render_mode depth_draw_never;
 
 uniform bool is_in_view = true;
 uniform float intensity : hint_range(0.0, 1.0, 0.01) = 1.0;
+uniform bool focus_floor = true;
+uniform int focused_floor = 0;
 
 varying vec3 world_vertex;
 

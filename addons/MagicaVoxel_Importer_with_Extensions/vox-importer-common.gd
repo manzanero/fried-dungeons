@@ -30,7 +30,7 @@ func import(source_path, destination_path, options, _platforms, _gen_files):
 	var file = FileAccess.open(source_path, FileAccess.READ)
 
 	if file == null:
-		print(FileAccess.get_open_error())
+		return FileAccess.get_open_error()
 
 	var identifier = PackedByteArray([ file.get_8(), file.get_8(), file.get_8(), file.get_8() ]).get_string_from_ascii()
 	var version = file.get_32()

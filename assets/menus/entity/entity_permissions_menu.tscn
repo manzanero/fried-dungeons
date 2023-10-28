@@ -24,10 +24,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -294.5
-offset_top = -176.5
-offset_right = 294.5
-offset_bottom = 176.5
+offset_left = -203.5
+offset_top = -157.5
+offset_right = 203.5
+offset_bottom = 157.5
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -65,21 +65,9 @@ vertical_alignment = 1
 
 [node name="IdEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer2"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(103.105, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "ABCDEFGH"
-editable = false
-
-[node name="HBoxContainer3" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="LabelEdit" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/HBoxContainer3"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_force_pass_scroll_events = false
-placeholder_text = "name..."
-alignment = 1
 editable = false
 
 [node name="PlayerPermissionsTree" type="Tree" parent="Panel/MarginContainer/VBoxContainer"]
@@ -87,8 +75,6 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 columns = 3
-hide_root = true
-select_mode = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2

@@ -19,18 +19,9 @@ var shader_50 := preload("res://resources/mesh_libraries/solids_transparent_50.g
 # empty
 #var meshes_empty : MeshLibrary
 
-var DEBUG : bool = false
-#var DEBUG : bool = true
-
 
 func load_library():
 	var start_time = Time.get_ticks_msec()
-	
-	if not DEBUG:
-		meshes = load("res://resources/mesh_libraries/solids.tres")
-		meshes_len = meshes.get_item_list().size()
-		meshes_50 = load("res://resources/mesh_libraries/solids_50.tres")
-		return
 	
 	meshes = MeshLibrary.new()
 	shape = BoxShape3D.new()
@@ -117,9 +108,6 @@ func load_library():
 
 	var elapsed_time = (Time.get_ticks_msec() - start_time) * 0.001
 	print("Skin library took %s s to load" % [elapsed_time])
-	
-	ResourceSaver.save(meshes, "res://resources/mesh_libraries/solids.tres")
-	ResourceSaver.save(meshes_50, "res://resources/mesh_libraries/solids_50.tres")
 
 
 func load_solid(source_path, mesh_name):
